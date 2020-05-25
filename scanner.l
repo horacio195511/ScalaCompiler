@@ -90,7 +90,7 @@ var		{tokenKeyword("VAR"); return(VAR);}
 
 \n	{ 
 	LIST;
-	printf("%d: %s\n", linenum++, buf);
+	printf("%d: %s", linenum++, buf);
 	buf[0] = '\0';
 	}
 

@@ -64,23 +64,25 @@ symtab *head;
 
 %start program
 %%
-program : 		OBJECT IDENTIFIER'{' 
+program : 	OBJECT IDENTIFIER'{' 
 			declaration
 			'}'
 			;
 
-declaration : 		constant_declaration			{Trace("reduce to constant declaration");}
-		|	variable_declaration			{Trace("reduce to variable declaration");}
-		|	array_declaration			{Trace("reduce to array declaration");}
-		|	method_declaration			{Trace("reduce to method declaration");}
-		|	declaration constant_declaration	
-		|	declaration variable_declaration	
-		|	declaration array_declaration		
-		|	declaration method_declaration		
+declaration : 
+			constant_declaration		{Trace("reduce to constant declaration\n");}
+		|	variable_declaration		{Trace("reduce to variable declaration\n");}
+		|	array_declaration			{Trace("reduce to array declaration\n");}
+		|	method_declaration_headder	{Trace("reduce to method declaration\n");}
+		|	declaration constant_declaration
+		|	declaration variable_declaration
+		|	declaration array_declaration
+		|	declaration method_declaration_headder
 		|
 		;
 
-constant_declaration :	VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
+constant_declaration :	
+			VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(float)); }
 		|	VAL IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(int)); }
@@ -88,10 +90,18 @@ constant_declaration :	VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
 		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
-		|	VAL IDENTIFIER '=' VALUE			{ void *input = $4; insert(head, 0, $2, "undefined", input, sizeof(void*)); }
+		|	VAL IDENTIFIER '=' REAL			{ float input = $4; 
+								insert(head, 0, $2, "float", &input, sizeof(void*)); }
+		|	VAL IDENTIFIER '=' NUMBER		{ int input = $4; 
+								insert(head, 0, $2, "int", &input, sizeof(void*)); }
+		|	VAL IDENTIFIER '=' BOOL			{ char *input = $4; 
+								insert(head, 0, $2, "BOOLEAN", &input, sizeof(void*)); }
+		|	VAL IDENTIFIER '=' STRING		{ char *input = $4; 
+								insert(head, 0, $2, "string", &input, sizeof(void*)); }
+
 		;
 
-variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
+variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 								insert(head, 1, $2, $4, &input, sizeof(float)); }
 		|	VAR IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
 								insert(head, 1, $2, $4, &input, sizeof(int)); }
@@ -99,14 +109,28 @@ variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 								insert(head, 1, $2, $4, &input, sizeof(char*)); }
 		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
+		|	no_value_variable_declaration
 		;
 
-array_declaration :	VAR IDENTIFIER ':' FLOAT '[' NUMBER ']'		{}
-		|	VAR IDENTIFIER ':' INT	 '[' NUMBER ']'		{}
+no_value_variable_declaration : 
+			VAR IDENTIFIER ':' FLOAT	{ insert(head, 1, $2, $4, 0, sizeof(float)); }
+		|	VAR IDENTIFIER ':' INT		{insert(head, 1, $2, $4, 0, sizeof(int)); }
+		|	VAR IDENTIFIER ':' BOOLEAN	{ insert(head, 1, $2, $4, 0, sizeof(char*)); }
+		|	VAR IDENTIFIER ':' STRING	{ insert(head, 0, $2, $4, 0, sizeof(char*)); }
+		;
+
+array_declaration :	
+			VAR IDENTIFIER ':' FLOAT '[' NUMBER ']'		{}
+		|	VAR IDENTIFIER ':' INT '[' NUMBER ']'		{}
 		|	VAR IDENTIFIER ':' STRING '[' NUMBER ']'	{}
 		; 
 
-method_declaration :		DEF IDENTIFIER '(' formal_argument ')' ':' type
+method_declaration_headder :
+				DEF IDENTIFIER '(' formal_argument ')' ':' type method_declaration_body
+		|		DEF IDENTIFIER '(' formal_argument ')'method_declaration_body
+		;
+
+method_declaration_body:
 				'{'
 				declaration
 				statement
@@ -116,7 +140,7 @@ method_declaration :		DEF IDENTIFIER '(' formal_argument ')' ':' type
 type :	INT | STRING | BOOLEAN ;
 
 formal_argument :	IDENTIFIER ':' type	
-		|	formal_argument IDENTIFIER ':' type 
+		|	formal_argument ',' IDENTIFIER ':' type 
 		| 
 		;
 
@@ -186,16 +210,10 @@ boolean_expression :	expression '<' expression
 		|	IDENTIFIER
 		;
 
-stat : 		error '\n'
-		{
-			yyerrork;
-			printf("Reenter last line: %d ", linenum);
-		}
-		;
 %%
 void yyerror(char *msg)
 {
-    fprintf(stderr, "%s\n", msg);
+    fprintf(stderr, "%s @line: %d\n", msg, linenum);
 }
 
 void main(int argc, char *argv[])
