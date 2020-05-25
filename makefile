@@ -1,5 +1,5 @@
 scala: lex.yy.c y.tab.c
-	gcc -o scala y.tab.c lex.yy.c -ll -ly
+	gcc -g -o scala y.tab.c lex.yy.c -ll -ly
 
 lex.yy.c: scanner.l
 	lex -l scanner.l

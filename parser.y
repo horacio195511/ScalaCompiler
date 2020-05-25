@@ -69,14 +69,14 @@ program : 		OBJECT IDENTIFIER'{'
 			'}'
 			;
 
-declaration : 		constant_declaration
-		|	variable_declaration
-		|	array_declaration
-		|	method_declaration	
-		|	declaration constant_declaration	{Trace("reduce to constant declaration");}
-		|	declaration variable_declaration	{Trace("reduce to variable declaration");}
-		|	declaration array_declaration		{Trace("reduce to array declaration");}
-		|	declaration method_declaration		{Trace("reduce to method declaration");}
+declaration : 		constant_declaration			{Trace("reduce to constant declaration");}
+		|	variable_declaration			{Trace("reduce to variable declaration");}
+		|	array_declaration			{Trace("reduce to array declaration");}
+		|	method_declaration			{Trace("reduce to method declaration");}
+		|	declaration constant_declaration	
+		|	declaration variable_declaration	
+		|	declaration array_declaration		
+		|	declaration method_declaration		
 		|
 		;
 
@@ -88,16 +88,16 @@ constant_declaration :	VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
 		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
-		|	VAL IDENTIFIER VALUE			{ void *input = $3; insert(head, 0, $2, "undefined", input, sizeof(void*)); }
+		|	VAL IDENTIFIER '=' VALUE			{ void *input = $4; insert(head, 0, $2, "undefined", input, sizeof(void*)); }
 		;
 
-variable_declaration :	VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
+variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
 								insert(head, 1, $2, $4, &input, sizeof(float)); }
-		|	VAL IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
+		|	VAR IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
 								insert(head, 1, $2, $4, &input, sizeof(int)); }
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL	{ char *input = $6; 
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL	{ char *input = $6; 
 								insert(head, 1, $2, $4, &input, sizeof(char*)); }
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(char*)); }
 		;
 
@@ -171,7 +171,6 @@ expression :		expression '+' expression
 		|	'-' expression
 		|	boolean_expression
 		|	VALUE
-		|	IDENTIFIER
 		;
 
 boolean_expression :	expression '<' expression

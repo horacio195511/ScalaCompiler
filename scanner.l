@@ -33,63 +33,65 @@ letter		[a-zA-Z0-9]
 %x	COMMENT
 
 %%
-int		{yylval.string = "int"; return(INT);}
-float		{yylval.string = "float"; return(FLOAT);}
-string		{yylval.string = "string"; return(STRING);}
-break		{return(BREAK);}
-class		{return(CLASS);}
-continue	{return(CONTINUE);}
-def		{return(DEF);}
-do		{return(DO);}
-else		{return(ELSE);}
-exit		{return(EXIT);}
-for		{return(FOR);}
-if		{return(IF);}
-null		{return(TNULL);}
-while		{return(WHILE);}
-object		{return(OBJECT);}
-print		{return(PRINT);}
-println		{return(PRINTLN);}
-repeat		{return(REPEAT);}
-return		{return(RETURN);}
-to		{return(TO);}
-read		{return(READ);}
-true		{return(TRUE);}
-false		{return(FALSE);}
-val		{return(VAL);}
-var		{return(VAR);}
-\,		{return(',');}
-\:		{return(':');}
-\.		{return('.');}
-\;		{return(';');}
-\(		{return('(');}
-\)		{return(')');}
-\[		{return('[');}
-\]		{return(']');}
-\{		{return('{');}
-\}		{return('}');}
-\+		{return('+');}
-\-		{return('-');}
-\*		{return('*');}
-\/		{return('/');}
-=		{return('=');}
-\<		{return('<');}
-\<=		{return(LESSEQUAL);}
->		{return('>');}
->=		{return(LARGEEQUAL);}
-==		{return(EQUAL);}
-!=		{return(NOTEQUAL);}
-&&		{return(AND);}
-\|\|		{return(OR);}
-!		{return('!');}
-%		{return('%');}
+int		{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
+float		{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
+string		{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
+break		{tokenKeyword("BREAK"); return(BREAK);}
+class		{tokenKeyword("CLASS"); return(CLASS);}
+continue	{tokenKeyword("CONTINUE"); return(CONTINUE);}
+def		{tokenKeyword("DEF"); return(DEF);}
+do		{tokenKeyword("DO"); return(DO);}
+else		{tokenKeyword("ELSE"); return(ELSE);}
+exit		{tokenKeyword("EXIT"); return(EXIT);}
+for		{tokenKeyword("FOR"); return(FOR);}
+if		{tokenKeyword("IF"); return(IF);}
+null		{tokenKeyword("NULL"); return(TNULL);}
+while		{tokenKeyword("WHILE"); return(WHILE);}
+object		{tokenKeyword("OBJECT"); return(OBJECT);}
+print		{tokenKeyword("PRINT"); return(PRINT);}
+println		{tokenKeyword("PRINTLN"); return(PRINTLN);}
+repeat		{tokenKeyword("REPEAT"); return(REPEAT);}
+return		{tokenKeyword("RETURN"); return(RETURN);}
+to		{tokenKeyword("TO"); return(TO);}
+read		{tokenKeyword("READ"); return(READ);}
+true		{tokenKeyword("TRUE"); return(TRUE);}
+false		{tokenKeyword("FALSE"); return(FALSE);}
+val		{tokenKeyword("VAL"); return(VAL);}
+var		{tokenKeyword("VAR"); return(VAR);}
+\,		{token(","); return(',');}
+\:		{token(":"); return(':');}
+\.		{token("."); return('.');}
+\;		{token(";"); return(';');}
+\(		{token("("); return('(');}
+\)		{token(")"); return(')');}
+\[		{token("["); return('[');}
+\]		{token("]"); return(']');}
+\{		{token("{"); return('{');}
+\}		{token("}"); return('}');}
+\+		{token("+"); return('+');}
+\-		{token("-"); return('-');}
+\*		{token("*"); return('*');}
+\/		{token("/"); return('/');}
+=		{token("=") ;return('=');}
+\<		{token("<"); return('<');}
+\<=		{token("<="); return(LESSEQUAL);}
+>		{token(">"); return('>');}
+>=		{token(">="); return(LARGEEQUAL);}
+==		{token("=="); return(EQUAL);}
+!=		{token("!="); return(NOTEQUAL);}
+&&		{token("&&"); return(AND);}
+\|\|		{token("||"); return(OR);}
+!		{token("!"); return('!');}
+%		{token("%"); return('%');}
 
-{number}	{yylval.ival = atoi(yytext); return(NUMBER);}
+{number}	{tokenInteger("INT", atoi(yytext)); yylval.ival = atoi(yytext); return(NUMBER);}
 
-{real}		{yylval.fval = atof(yytext); return(REAL);}
+{real}		{tokenFloat("FLOAT", atof(yytext)); yylval.fval = atof(yytext); return(REAL);}
 
-\n	{
+\n	{ 
 	LIST;
+	printf("%d: %s\n", linenum++, buf);
+	buf[0] = '\0';
 	}
 
 [ \t]*	{LIST;}
@@ -124,6 +126,7 @@ var		{return(VAR);}
 		}
 
 {identifier}	{
+		tokenString("id",yytext);
 		yylval.string = yytext; return(IDENTIFIER);
 		}
 
