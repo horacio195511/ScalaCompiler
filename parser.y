@@ -17,6 +17,7 @@ symtab* create();
 void insert(symtab*, int, char*, char*, void*, size_t);
 // (head, name, type, value, size of data)
 void dump(symtab*);
+symtab* lookup(symtab*, char*);
 void yyerror(char*);
 extern int yylex(void);
 // parameter used for error handling
@@ -81,8 +82,12 @@ declaration :
 		;
 
 constant_declaration :	
-			VAL IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6; 
-								insert(head, 0, $2, $4, &input, sizeof(float)); }
+			VAL IDENTIFIER ':' FLOAT '=' REAL	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												float input = $6;
+												insert(head, 0, $2, $4, &input, sizeof(float));
+												}
 		|	VAL IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
 								insert(head, 0, $2, $4, &input, sizeof(int)); }
 		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL	{ char *input = $6; 
@@ -161,7 +166,11 @@ sab_statement:
 		
 simple_statement :	
 			IDENTIFIER '=' expression
-		|	IDENTIFIER '=' procedure_invocation		{ }
+		|	IDENTIFIER '=' procedure_invocation		{
+													// the identifier could only be variable
+													symtab *id = lookup(head, $1);
+													if(id->changeable == 0) printf("Try to redefine constant variable\n");
+													}
 		|	IDENTIFIER'['NUMBER']' '=' expression
 		|	PRINT '(' expression ')'
 		|	PRINTLN '(' expression ')'
@@ -255,6 +264,7 @@ void main(int argc, char *argv[])
     /* perform parsing */
     if (yyparse() == 1)                 /* parsing */
 	yyerror("Parsing error !");     /* syntax error */
+	else dump(head);
 }
 
 symtab* create(){
