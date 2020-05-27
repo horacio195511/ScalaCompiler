@@ -86,42 +86,108 @@ constant_declaration :
 												char *name = (char*)malloc(sizeof(char)*strlen($2));
 												strcpy(name, $1);
 												float input = $6;
-												insert(head, 0, $2, $4, &input, sizeof(float));
+												insert(head, 0, name, "float", &input, sizeof(float));
 												}
-		|	VAL IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
-								insert(head, 0, $2, $4, &input, sizeof(int)); }
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL	{ char *input = $6; 
-								insert(head, 0, $2, $4, &input, sizeof(char*)); }
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
-								insert(head, 0, $2, $4, &input, sizeof(char*)); }
-		|	VAL IDENTIFIER '=' REAL			{ float input = $4; 
-								insert(head, 0, $2, "float", &input, sizeof(void*)); }
-		|	VAL IDENTIFIER '=' NUMBER		{ int input = $4; 
-								insert(head, 0, $2, "int", &input, sizeof(void*)); }
-		|	VAL IDENTIFIER '=' BOOL			{ char *input = $4; 
-								insert(head, 0, $2, "BOOLEAN", &input, sizeof(void*)); }
-		|	VAL IDENTIFIER '=' STRING		{ char *input = $4; 
-								insert(head, 0, $2, "string", &input, sizeof(void*)); }
+		|	VAL IDENTIFIER ':' INT '=' NUMBER	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												int input = $6;
+												insert(head, 0, name, "int", &input, sizeof(float));
+												}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												char *input = (char*)malloc(sizeof(char)*strlen($6));
+												strcpy(input, $6);
+												insert(head, 0, name, "boolean", &input, sizeof(float));
+												}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{
+														char *name = (char*)malloc(sizeof(char)*strlen($2));
+														strcpy(name, $1);
+														char *input = (char*)malloc(sizeof(char)*strlen($6));
+														strcpy(input, $6);
+														insert(head, 0, name, "string", &input, sizeof(float));
+														}
+		|	VAL IDENTIFIER '=' REAL			{
+											char *name = (char*)malloc(sizeof(char)*strlen($2));
+											strcpy(name, $1);
+											float input = $4
+											insert(head, 0, name, "float", &input, sizeof(float));
+											}
+		|	VAL IDENTIFIER '=' NUMBER		{
+											char *name = (char*)malloc(sizeof(char)*strlen($2));
+											strcpy(name, $1);
+											int input = $4;
+											insert(head, 0, name, "int", &input, sizeof(int));
+											}
+		|	VAL IDENTIFIER '=' BOOL			{
+											char *name = (char*)malloc(sizeof(char)*strlen($2));
+											strcpy(name, $1);
+											char *input = (char*)malloc(sizeof(char)*strlen($4));
+											strcpy(input, $4);
+											insert(head, 0, name, "boolean", &input, 0);
+											}
+		|	VAL IDENTIFIER '=' STRING		{
+											char *name = (char*)malloc(sizeof(char)*strlen($2));
+											strcpy(name, $1);
+											char *input = (char*)malloc(sizeof(char)*strlen($4));
+											strcpy(input, $4);
+											insert(head, 0, name, "string", &input, 0);
+											}
 
 		;
 
 variable_declaration :	
-			VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
-								insert(head, 1, $2, $4, &input, sizeof(float)); }
-		|	VAR IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
-								insert(head, 1, $2, $4, &input, sizeof(int)); }
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL	{ char *input = $6; 
-								insert(head, 1, $2, $4, &input, sizeof(char*)); }
-		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{ char *input = $6; 
-								insert(head, 0, $2, $4, &input, sizeof(char*)); }
+			VAR IDENTIFIER ':' FLOAT '=' REAL	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												float input = $6;
+												insert(head, 1, name, "float", &input, sizeof(float));
+												}
+		|	VAR IDENTIFIER ':' INT '=' NUMBER	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												int input = $6;
+												insert(head, 1, name, "int", &input, sizeof(int));
+												}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL	{
+												char *name = (char*)malloc(sizeof(char)*strlen($2));
+												strcpy(name, $1);
+												char *input = (char*)malloc(sizeof(char)*strlen($6));
+												strcpy(input, $6);
+												insert(head, 1, name, "boolean", &input, sizeof(float));
+												}
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{
+														char *name = (char*)malloc(sizeof(char)*strlen($2));
+														strcpy(name, $1);
+														char *input = (char*)malloc(sizeof(char)*strlen($6));
+														strcpy(input, $6);
+														insert(head, 1, name, "STRING", &input, sizeof(float));
+														}
 		|	no_value_variable_declaration
 		;
 
 no_value_variable_declaration : 
-			VAR IDENTIFIER ':' FLOAT	{ insert(head, 1, $2, $4, NULL, 0); }
-		|	VAR IDENTIFIER ':' INT		{ insert(head, 1, $2, $4, NULL, 0); }
-		|	VAR IDENTIFIER ':' BOOLEAN	{ insert(head, 1, $2, $4, NULL, 0); }
-		|	VAR IDENTIFIER ':' STRING	{ insert(head, 0, $2, $4, NULL, 0); }
+			VAR IDENTIFIER ':' FLOAT	{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "float", NULL, 0);
+										}
+		|	VAR IDENTIFIER ':' INT		{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "int", NULL, 0);
+										}
+		|	VAR IDENTIFIER ':' BOOLEAN	{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "boolean", NULL, 0);
+										}
+		|	VAR IDENTIFIER ':' STRING	{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "string", NULL, 0);
+										}
 		;
 
 array_declaration :	
@@ -131,8 +197,16 @@ array_declaration :
 		; 
 
 method_declaration_headder :
-				DEF IDENTIFIER '(' formal_argument ')' ':' type method_declaration_body
-		|		DEF IDENTIFIER '(' formal_argument ')'method_declaration_body
+				DEF IDENTIFIER '(' formal_argument ')' ':' type method_declaration_body	{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "method", NULL, 0);
+										}
+		|		DEF IDENTIFIER '(' formal_argument ')'method_declaration_body	{
+										char *name = (char*)malloc(sizeof(char)*strlen($2));
+										strcpy(name, $1);
+										insert(head, 0, name, "method", NULL, 0);
+										}
 		;
 
 method_declaration_body:
@@ -298,6 +372,7 @@ void insert(symtab *head, int changeable, char *name, char *type, void *item , s
 // print the value of each node, with different type of value.
 void dump(symtab *head){
 	// using nested printf to solve the type recognision problem
+	// currently only support int, float, char, string type
 	symtab *current = head;
 	while(current->next !=  NULL){
 		current = current->next;
@@ -306,6 +381,10 @@ void dump(symtab *head){
 		else if(strcmp(current->type, "float") == 0) 
 			printf("%s = %f\n", current->name, *(float*)current->value);
 		else if(strcmp(current->type, "char") == 0) 
+			printf("%s = %c\n", current->name, *(char*)current->value);
+		else if(strcmp(current->type, "string") == 0)
+			printf("%s = %c\n", current->name, *(char*)current->value);
+		else if(strcmp(current->type, "method") == 0)
 			printf("%s = %c\n", current->name, *(char*)current->value);
 		else{ printf("error\n"); }
 	}
