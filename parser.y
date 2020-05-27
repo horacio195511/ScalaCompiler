@@ -45,7 +45,6 @@ symtab *head;
 %token <string> STRING_VAL 
 %token <string> IDENTIFIER
 %token <string> INT STRING BOOLEAN FLOAT BOOL
-%token <notype> VALUE
 
 %type <string> type
 
@@ -101,7 +100,8 @@ constant_declaration :
 
 		;
 
-variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
+variable_declaration :	
+			VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 								insert(head, 1, $2, $4, &input, sizeof(float)); }
 		|	VAR IDENTIFIER ':' INT '=' NUMBER	{ int input = $6; 
 								insert(head, 1, $2, $4, &input, sizeof(int)); }
@@ -113,10 +113,10 @@ variable_declaration :	VAR IDENTIFIER ':' FLOAT '=' REAL	{ float input = $6;
 		;
 
 no_value_variable_declaration : 
-			VAR IDENTIFIER ':' FLOAT	{ insert(head, 1, $2, $4, 0, sizeof(float)); }
-		|	VAR IDENTIFIER ':' INT		{insert(head, 1, $2, $4, 0, sizeof(int)); }
-		|	VAR IDENTIFIER ':' BOOLEAN	{ insert(head, 1, $2, $4, 0, sizeof(char*)); }
-		|	VAR IDENTIFIER ':' STRING	{ insert(head, 0, $2, $4, 0, sizeof(char*)); }
+			VAR IDENTIFIER ':' FLOAT	{ insert(head, 1, $2, $4, NULL, 0); }
+		|	VAR IDENTIFIER ':' INT		{ insert(head, 1, $2, $4, NULL, 0); }
+		|	VAR IDENTIFIER ':' BOOLEAN	{ insert(head, 1, $2, $4, NULL, 0); }
+		|	VAR IDENTIFIER ':' STRING	{ insert(head, 0, $2, $4, NULL, 0); }
 		;
 
 array_declaration :	
@@ -139,12 +139,14 @@ method_declaration_body:
 
 type :	INT | STRING | BOOLEAN ;
 
-formal_argument :	IDENTIFIER ':' type	
+formal_argument :
+			IDENTIFIER ':' type	
 		|	formal_argument ',' IDENTIFIER ':' type 
 		| 
 		;
 
-statement :		sab_statement 
+statement :		
+			sab_statement
 		|	conditional_statement 
 		|	loop_statement
 		|	statement sab_statement 
@@ -152,11 +154,14 @@ statement :		sab_statement
 		|	statement loop_statement
 		;
 
-sab_statement:		simple_statement 
+sab_statement:		
+			simple_statement 
 		|	block_statement 
 		;
 		
-simple_statement :	IDENTIFIER '=' expression
+simple_statement :	
+			IDENTIFIER '=' expression
+		|	IDENTIFIER '=' procedure_invocation		{ }
 		|	IDENTIFIER'['NUMBER']' '=' expression
 		|	PRINT '(' expression ')'
 		|	PRINTLN '(' expression ')'
@@ -174,7 +179,8 @@ block_statement :	'{'
 			'}'
 			;
 
-conditional_statement :	IF '(' boolean_expression ')'
+conditional_statement :	
+			IF '(' boolean_expression ')'
 			sab_statement
 			ELSE
 			sab_statement
@@ -182,22 +188,33 @@ conditional_statement :	IF '(' boolean_expression ')'
 			sab_statement
 		;
 
-loop_statement :	WHILE '(' boolean_expression ')'
+loop_statement :	
+			WHILE '(' boolean_expression ')'
 			sab_statement
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
 			sab_statement
 		;
 
-expression :		expression '+' expression
+procedure_invocation:
+		|	IDENTIFIER '(' parameter_expression ')'
+		;
+
+parameter_expression :
+			parameter_expression ',' expression
+		|	expression
+		;
+
+expression :
+		|	expression '+' expression
 		|	expression '-' expression
 		|	expression '*' expression
 		|	expression '/' expression
 		|	'-' expression
 		|	boolean_expression
-		|	VALUE
 		;
 
-boolean_expression :	expression '<' expression
+boolean_expression :	
+			expression '<' expression
 		|	expression LESSEQUAL expression
 		|	expression LARGEEQUAL expression
 		|	expression '>' expression
@@ -205,9 +222,17 @@ boolean_expression :	expression '<' expression
 		|	expression NOTEQUAL expression
 		|	expression AND expression
 		|	expression OR expression
-		|	'!' expression 
-		|	TRUE | FALSE
+		|	'!' expression
+		|	term
+		;
+
+term : 
+		|	TRUE
+		|	FALSE
 		|	IDENTIFIER
+		|	NUMBER
+		|	REAL
+		|	STRING_VAL
 		;
 
 %%
@@ -274,4 +299,16 @@ void dump(symtab *head){
 			printf("%s = %c\n", current->name, *(char*)current->value);
 		else{ printf("error\n"); }
 	}
+}
+
+// return the address of searching id, or 0 if not found
+symtab* lookup(symtab *head, char *id){
+	symtab *current = head;
+	while(current->next != NULL){
+		current = current->next;
+		if(strcmp(current->name, id) == 0){
+			return current;
+		}
+	}
+	return NULL;
 }
