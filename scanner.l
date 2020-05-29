@@ -35,6 +35,7 @@ letter		[a-zA-Z0-9]
 %%
 int		{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
 float		{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
+boolean		{tokenKeyword("BOOLEAN"); yylval.string = "boolean"; return(BOOLEAN);}
 string		{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
 break		{tokenKeyword("BREAK"); return(BREAK);}
 class		{tokenKeyword("CLASS"); return(CLASS);}
@@ -127,7 +128,9 @@ var		{tokenKeyword("VAR"); return(VAR);}
 
 {identifier}	{
 		tokenString("id",yytext);
-		yylval.string = yytext; return(IDENTIFIER);
+		char *id = (char*)malloc(sizeof(char)*strlen(yytext));
+		strcpy(id, yytext);
+		yylval.string = id; return(IDENTIFIER);
 		}
 
 
