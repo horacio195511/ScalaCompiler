@@ -5,7 +5,7 @@ lex.yy.c: scanner.l
 	lex -l scanner.l
 
 y.tab.c: parser.y
-	yacc -d --report-file=yaccReport parser.y 
+	yacc -d parser.y 
 
 clean:
-	rm lex.yy.c y.tab.*
+	rm lex.yy.c y.tab.* scala

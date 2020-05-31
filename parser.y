@@ -54,117 +54,81 @@ symtab *head;
 %left '*' '/'
 %nonassoc UMINUS
 
+%left FLOAT
+%left INT
+%left STRING
+%left BOOLEAN
+
 %start program
 
 %%
-program: 	OBJECT IDENTIFIER'{' 
-			declaration
-			'}'
-			;
+program: 	OBJECT IDENTIFIER'{'declaration'}';
 
-declaration: 
-			constant_declaration		{Trace("reduce to constant declaration\n");}
-		|	variable_declaration		{Trace("reduce to variable declaration\n");}
-		|	array_declaration			{Trace("reduce to array declaration\n");}
-		|	method_declaration			{Trace("reduce to method declaration\n");}
+declaration:
+			constant_declaration				{Trace("reduce to constant declaration\n");}
+		|	variable_declaration				{Trace("reduce to variable declaration\n");}
+		|	array_declaration					{Trace("reduce to array declaration\n");}
+		|	method_declaration					{Trace("reduce to method declaration\n");}
 		|	declaration constant_declaration	{Trace("reduce to constant declaration\n");}
 		|	declaration variable_declaration	{Trace("reduce to variable declaration\n");}
 		|	declaration array_declaration		{Trace("reduce to array declaration\n");}
 		|	declaration method_declaration		{Trace("reduce to method declaration\n");}
 		;
 
-constant_declaration:	
-			VAL IDENTIFIER ':' FLOAT '=' REAL	{
-												insert(head, $2, $4);
-												}
-		|	VAL IDENTIFIER ':' INT '=' NUMBER	{
-												insert(head, $2, $4);
-												}
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL	{
-												insert(head, $2, $4);
-												}
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{
-														insert(head, $2, $4);
-														}
+constant_declaration:
+			VAL IDENTIFIER ':' FLOAT '=' REAL			{insert(head, $2, $4);}
+		|	VAL IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
 		|	no_type_constant_declaration
 		;
 
 no_type_constant_declaration:
-			VAL IDENTIFIER '=' REAL			{
-											insert(head, $2, "float");
-											}
-		|	VAL IDENTIFIER '=' NUMBER		{
-											insert(head, $2, "int");
-											}
-		|	VAL IDENTIFIER '=' BOOL			{
-											insert(head, $2, "bool");
-											}
-		|	VAL IDENTIFIER '=' STRING		{
-											insert(head, $2, "string");
-											}
+			VAL IDENTIFIER '=' REAL			{insert(head, $2, "float");}
+		|	VAL IDENTIFIER '=' NUMBER		{insert(head, $2, "int");}
+		|	VAL IDENTIFIER '=' BOOL			{insert(head, $2, "bool");}
+		|	VAL IDENTIFIER '=' STRING		{insert(head, $2, "string");}
 		;
 
 variable_declaration:	
-			VAR IDENTIFIER ':' FLOAT '=' REAL	{
-												insert(head, $2, $4);
-												}
-		|	VAR IDENTIFIER ':' INT '=' NUMBER	{
-												insert(head, $2, $4);
-												}
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL	{
-												insert(head, $2, $4);
-												}
-		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{
-														insert(head, $2, $4);
-														}
+			VAR IDENTIFIER ':' FLOAT '=' REAL			{insert(head, $2, $4);}
+		|	VAR IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
 		|	no_value_variable_declaration
 		;
 
 no_value_variable_declaration: 
-			VAR IDENTIFIER ':' type	{
-									insert(head, $2, $4);
-									}
+			VAR IDENTIFIER ':' type		{insert(head, $2, $4);}
 		;
 
 array_declaration:	
-			VAR IDENTIFIER ':' type '[' NUMBER ']'		{
-														insert(head, $2, $4);
-														}
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{insert(head, $2, $4);}
 		; 
 
 method_declaration:
-				DEF IDENTIFIER '(' formal_argument ')' method_block
-														{
-														insert(head, $2, "method");
-														}
-		|
-				DEF IDENTIFIER '(' formal_argument ')' ':' type method_block
-														{
-														insert(head, $2, "method");
-														}
+			DEF IDENTIFIER '(' formal_argument ')' method_block				{insert(head, $2, "method");}
+		|	DEF IDENTIFIER '(' formal_argument ')' ':' type method_block	{insert(head, $2, "method");}
 		;
 
-method_block:
-				'{'
-				zmvcd
-				zms
-				'}'
-				;
+method_block:	'{'zmvcd zms'}';
 
-zms:	zms statement | ;
+zms:	zms statement | zms complex_statement | ;
 
 type:	FLOAT
 	| 	INT
 	|	STRING
-	|	BOOLEAN 	{$$=$1;};
+	|	BOOLEAN 	{$$=$1;}
+	;
 
 formal_argument:
 			IDENTIFIER ':' type
 		|	formal_argument ',' IDENTIFIER ':' type
+		|
 		;
 
 statement:
-		|	conditional_statement
+			conditional_statement
 		|	loop_statement
 		;
 		
@@ -179,39 +143,19 @@ simple_statement:
 		|	RETURN
 		;
 
-complex_statement:
-			complex_statement simple_statement
-		|	simple_statement
+complex_statement:	complex_statement simple_statement | ;
+
+zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
+
+oms:	oms statement | oms complex_statement | ;
+
+conditional_statement:
+			IF '(' boolean_expression ')' sab_statment						{Trace("Reduce to conditional statement\n");}
+		|	IF '(' boolean_expression ')' sab_statment ELSE sab_statment	{Trace("Reduce to conditional statement\n");}
 		;
 
 block_statement:
-			'{' zmvcd oms '}'
-			;
-
-zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration |;
-oms:	oms statement | complex_statement ;
-
-conditional_statement:	
-			matched_stmt
-		|	unmatched_stmt
-		;
-
-matched_stmt:
-			IF '('boolean_expression ')'
-			matched_stmt
-			ELSE
-			matched_stmt
-		|	sab_statment
-		;
-
-unmatched_stmt:
-			IF '('boolean_expression ')'
-			conditional_statement
-		|	IF '('boolean_expression ')'
-			matched_stmt
-			ELSE
-			unmatched_stmt
-		;
+			'{' zmvcd oms '}';
 
 sab_statment:
 			simple_statement
@@ -219,10 +163,8 @@ sab_statment:
 		;
 
 loop_statement:	
-			WHILE '(' boolean_expression ')'
-			sab_statment
-		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
-			sab_statment
+			WHILE '(' boolean_expression ')'sab_statment
+		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'sab_statment
 		;
 
 procedure_invocation:
@@ -230,11 +172,11 @@ procedure_invocation:
 		;
 
 parameter_expression:
-			parameter_expression ',' expression
-		|	expression
+			parameter_expression ',' value
+		|	value
 		;
 
-value: NUMBER | REAL | IDENTIFIER;
+value: NUMBER | REAL | STRING_VAL | IDENTIFIER;
 
 bool: TRUE | FALSE | IDENTIFIER;
 
@@ -257,6 +199,7 @@ boolean_expression:
 		|	bool AND bool
 		|	bool OR bool
 		|	'!' bool
+		|	value
 		;
 %%
 
