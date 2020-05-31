@@ -54,39 +54,26 @@ symtab *head;
 %left '*' '/'
 %nonassoc UMINUS
 
-%left ':' '='
-
-%left INT
-%left FLOAT
-%left STRING
-%left BOOLEAN
-
-%left NUMBER
-%left REAL
-%left STRING_VAL
-%left BOOL
-
 %start program
 
 %%
-program : 	OBJECT IDENTIFIER'{' 
+program: 	OBJECT IDENTIFIER'{' 
 			declaration
 			'}'
 			;
 
-declaration : 
+declaration: 
 			constant_declaration		{Trace("reduce to constant declaration\n");}
 		|	variable_declaration		{Trace("reduce to variable declaration\n");}
 		|	array_declaration			{Trace("reduce to array declaration\n");}
-		|	method_declaration_headder	{Trace("reduce to method declaration\n");}
-		|	declaration constant_declaration
-		|	declaration variable_declaration
-		|	declaration array_declaration
-		|	declaration method_declaration_headder
-		|
+		|	method_declaration			{Trace("reduce to method declaration\n");}
+		|	declaration constant_declaration	{Trace("reduce to constant declaration\n");}
+		|	declaration variable_declaration	{Trace("reduce to variable declaration\n");}
+		|	declaration array_declaration		{Trace("reduce to array declaration\n");}
+		|	declaration method_declaration		{Trace("reduce to method declaration\n");}
 		;
 
-constant_declaration :	
+constant_declaration:	
 			VAL IDENTIFIER ':' FLOAT '=' REAL	{
 												insert(head, $2, $4);
 												}
@@ -99,7 +86,11 @@ constant_declaration :
 		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{
 														insert(head, $2, $4);
 														}
-		|	VAL IDENTIFIER '=' REAL			{
+		|	no_type_constant_declaration
+		;
+
+no_type_constant_declaration:
+			VAL IDENTIFIER '=' REAL			{
 											insert(head, $2, "float");
 											}
 		|	VAL IDENTIFIER '=' NUMBER		{
@@ -111,10 +102,9 @@ constant_declaration :
 		|	VAL IDENTIFIER '=' STRING		{
 											insert(head, $2, "string");
 											}
-
 		;
 
-variable_declaration :	
+variable_declaration:	
 			VAR IDENTIFIER ':' FLOAT '=' REAL	{
 												insert(head, $2, $4);
 												}
@@ -130,148 +120,146 @@ variable_declaration :
 		|	no_value_variable_declaration
 		;
 
-no_value_variable_declaration : 
-			VAR IDENTIFIER ':' FLOAT	{
-										insert(head, $2, $4);
-										}
-		|	VAR IDENTIFIER ':' INT		{
-										insert(head, $2, $4);
-										}
-		|	VAR IDENTIFIER ':' BOOLEAN	{
-										insert(head, $2, $4);
-										}
-		|	VAR IDENTIFIER ':' STRING	{
-										insert(head, $2, $4);
-										}
+no_value_variable_declaration: 
+			VAR IDENTIFIER ':' type	{
+									insert(head, $2, $4);
+									}
 		;
 
-array_declaration :	
-			VAR IDENTIFIER ':' FLOAT '[' NUMBER ']'		{
-														insert(head, $2, $4);
-														}
-		|	VAR IDENTIFIER ':' INT '[' NUMBER ']'		{
-														insert(head, $2, $4);
-														}
-		|	VAR IDENTIFIER ':' STRING '[' NUMBER ']'	{
+array_declaration:	
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{
 														insert(head, $2, $4);
 														}
 		; 
 
-method_declaration_headder :
-				DEF IDENTIFIER '(' formal_argument ')' ':' type method_declaration_body	{
+method_declaration:
+				DEF IDENTIFIER '(' formal_argument ')' method_block
+														{
 														insert(head, $2, "method");
-										}
-		|		DEF IDENTIFIER '(' formal_argument ')'method_declaration_body	{
+														}
+		|
+				DEF IDENTIFIER '(' formal_argument ')' ':' type method_block
+														{
 														insert(head, $2, "method");
-										}
+														}
 		;
 
-method_declaration_body:
+method_block:
 				'{'
-				declaration
-				statement
+				zmvcd
+				zms
 				'}'
+				;
+
+zms:	zms statement | ;
+
+type:	FLOAT
+	| 	INT
+	|	STRING
+	|	BOOLEAN 	{$$=$1;};
+
+formal_argument:
+			IDENTIFIER ':' type
+		|	formal_argument ',' IDENTIFIER ':' type
 		;
 
-type :	INT | STRING | BOOLEAN ;
-
-formal_argument :
-			IDENTIFIER ':' type	
-		|	formal_argument ',' IDENTIFIER ':' type 
-		| 
-		;
-
-statement :		
-			sab_statement
-		|	conditional_statement 
+statement:
+		|	conditional_statement
 		|	loop_statement
-		|	statement sab_statement 
-		|	statement conditional_statement 
-		|	statement loop_statement
-		;
-
-sab_statement:		
-			simple_statement 
-		|	block_statement 
 		;
 		
-simple_statement :	
+simple_statement:
 			IDENTIFIER '=' expression
 		|	IDENTIFIER '=' procedure_invocation
 		|	IDENTIFIER'['NUMBER']' '=' expression
 		|	PRINT '(' expression ')'
 		|	PRINTLN '(' expression ')'
 		|	READ IDENTIFIER
-		|	RETURN ra
+		|	RETURN expression
+		|	RETURN
 		;
 
-ra : 			expression 
-		|
+complex_statement:
+			complex_statement simple_statement
+		|	simple_statement
 		;
 
-block_statement :	'{'
-			declaration
-			statement
-			'}'
+block_statement:
+			'{' zmvcd oms '}'
 			;
 
-conditional_statement :	
-			IF '(' boolean_expression ')'
-			sab_statement
-			ELSE
-			sab_statement
-		|	IF '(' boolean_expression ')'
-			sab_statement
+zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration |;
+oms:	oms statement | complex_statement ;
+
+conditional_statement:	
+			matched_stmt
+		|	unmatched_stmt
 		;
 
-loop_statement :	
+matched_stmt:
+			IF '('boolean_expression ')'
+			matched_stmt
+			ELSE
+			matched_stmt
+		|	sab_statment
+		;
+
+unmatched_stmt:
+			IF '('boolean_expression ')'
+			conditional_statement
+		|	IF '('boolean_expression ')'
+			matched_stmt
+			ELSE
+			unmatched_stmt
+		;
+
+sab_statment:
+			simple_statement
+		|	block_statement
+		;
+
+loop_statement:	
 			WHILE '(' boolean_expression ')'
-			sab_statement
+			sab_statment
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
-			sab_statement
+			sab_statment
 		;
 
 procedure_invocation:
-		|	IDENTIFIER '(' parameter_expression ')'
+			IDENTIFIER '(' parameter_expression ')'
 		;
 
-parameter_expression :
+parameter_expression:
 			parameter_expression ',' expression
 		|	expression
 		;
 
-expression :
-		|	expression '+' expression
-		|	expression '-' expression
-		|	expression '*' expression
-		|	expression '/' expression
-		|	'-' expression
+value: NUMBER | REAL | IDENTIFIER;
+
+bool: TRUE | FALSE | IDENTIFIER;
+
+expression:
+		|	value '+' value
+		|	value '-' value
+		|	value '*' value
+		|	value '/' value
+		|	'-' value
 		|	boolean_expression
 		;
 
-boolean_expression :	
-			expression '<' expression
-		|	expression LESSEQUAL expression
-		|	expression LARGEEQUAL expression
-		|	expression '>' expression
-		|	expression EQUAL expression
-		|	expression NOTEQUAL expression
-		|	expression AND expression
-		|	expression OR expression
-		|	'!' expression
-		|	term
+boolean_expression:	
+			value '<' value
+		|	value LESSEQUAL value
+		|	value LARGEEQUAL value
+		|	value '>' value
+		|	value EQUAL value
+		|	value NOTEQUAL value
+		|	bool AND bool
+		|	bool OR bool
+		|	'!' bool
 		;
-
-term : 
-		|	TRUE
-		|	FALSE
-		|	IDENTIFIER
-		|	NUMBER
-		|	REAL
-		|	STRING_VAL
-		;
-
 %%
+
 void yyerror(char *msg)
 {
     fprintf(stderr, "%s @line: %d\n", msg, linenum);
