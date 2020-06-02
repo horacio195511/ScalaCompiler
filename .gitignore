@@ -5,3 +5,4 @@ scala
 *.swp
 input.scala
 *.swo
+.vscode/launch.json

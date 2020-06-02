@@ -54,11 +54,6 @@ symtab *head;
 %left '*' '/'
 %nonassoc UMINUS
 
-%left FLOAT
-%left INT
-%left STRING
-%left BOOLEAN
-
 %start program
 
 %%
@@ -113,8 +108,6 @@ method_declaration:
 
 method_block:	'{'zmvcd zms'}';
 
-zms:	zms statement | zms complex_statement | ;
-
 type:	FLOAT
 	| 	INT
 	|	STRING
@@ -143,11 +136,13 @@ simple_statement:
 		|	RETURN
 		;
 
-complex_statement:	complex_statement simple_statement | ;
+complex_statement:	complex_statement simple_statement | simple_statement;
 
 zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
 
-oms:	oms statement | oms complex_statement | ;
+zms:	zms statement | zms complex_statement | ;
+
+oms:	oms statement | oms complex_statement | statement | simple_statement ;
 
 conditional_statement:
 			IF '(' boolean_expression ')' sab_statment						{Trace("Reduce to conditional statement\n");}
@@ -158,13 +153,12 @@ block_statement:
 			'{' zmvcd oms '}';
 
 sab_statment:
-			simple_statement
-		|	block_statement
+			simple_statement | block_statement
 		;
 
 loop_statement:	
 			WHILE '(' boolean_expression ')'sab_statment
-		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'sab_statment
+		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'sab_statment	{Trace("reduce to loop statement");}
 		;
 
 procedure_invocation:
@@ -181,12 +175,12 @@ value: NUMBER | REAL | STRING_VAL | IDENTIFIER;
 bool: TRUE | FALSE | IDENTIFIER;
 
 expression:
-		|	value '+' value
-		|	value '-' value
-		|	value '*' value
-		|	value '/' value
-		|	'-' value
-		|	boolean_expression
+		|	expression '+' expression
+		|	expression '-' expression
+		|	expression '*' expression
+		|	expression '/' expression
+		|	'-'expression
+		|	value
 		;
 
 boolean_expression:	
@@ -233,22 +227,38 @@ symtab* create(){
 
 // generic insert function based on void pointer
 void insert(symtab *head, char *name, char *type){
+	/* check if the name is in the symbol table */
+	if(lookup(head, name) == NULL){
 	/* Insert in the end of linked list*/
+		symtab *current = head;
+		// go to the last element
+		while(current->next != NULL){
+			current = current->next;
+		}
+		// insert
+		symtab *new = (symtab*)malloc(sizeof(symtab));
+		char *nname = (char*)malloc(sizeof(char)*strlen(name));
+		char *ntype = (char*)malloc(sizeof(char)*strlen(type));
+		strcpy(nname, name);
+		strcpy(ntype, type);
+		current->name = nname;
+		current->type = ntype;
+		new->next = NULL;
+		current->next = new;
+	}
+
+}
+
+// return the address of searching id, or 0 if not found
+symtab* lookup(symtab *head, char *id){
 	symtab *current = head;
-	// go to the last element
 	while(current->next != NULL){
+		if(strcmp(current->name, id) == 0){
+			return current;
+		}
 		current = current->next;
 	}
-	// insert
-	symtab *new = (symtab*)malloc(sizeof(symtab));
-	char *nname = (char*)malloc(sizeof(char)*strlen(name));
-	char *ntype = (char*)malloc(sizeof(char)*strlen(type));
-	strcpy(nname, name);
-	strcpy(ntype, type);
-	current->name = nname;
-	current->type = ntype;
-	new->next = NULL;
-	current->next = new;
+	return NULL;
 }
 
 // print the value of each node, with different type of value.
@@ -260,16 +270,4 @@ void dump(symtab *head){
 		printf("%s : %s\n", current->name, current->type);
 		current = current->next;
 	}
-}
-
-// return the address of searching id, or 0 if not found
-symtab* lookup(symtab *head, char *id){
-	symtab *current = head;
-	while(current->next != NULL){
-		current = current->next;
-		if(strcmp(current->name, id) == 0){
-			return current;
-		}
-	}
-	return NULL;
 }
