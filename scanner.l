@@ -37,6 +37,7 @@ int		{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
 float		{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
 boolean		{tokenKeyword("BOOLEAN"); yylval.string = "boolean"; return(BOOLEAN);}
 string		{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
+char		{tokenKeyword("CHAR"); yylval.string = "char"; return(CHAR);}
 break		{tokenKeyword("BREAK"); return(BREAK);}
 class		{tokenKeyword("CLASS"); return(CLASS);}
 continue	{tokenKeyword("CONTINUE"); return(CONTINUE);}
@@ -89,6 +90,13 @@ var		{tokenKeyword("VAR"); return(VAR);}
 
 {real}		{tokenFloat("FLOAT", atof(yytext)); yylval.fval = atof(yytext); return(REAL);}
 
+{identifier}	{
+		tokenString("id",yytext);
+		char *id = (char*)malloc(sizeof(char)*strlen(yytext));
+		strcpy(id, yytext);
+		yylval.string = id; return(IDENTIFIER);
+		}
+
 \n	{ 
 	LIST;
 	printf("%d: %s", linenum++, buf);
@@ -125,14 +133,6 @@ var		{tokenKeyword("VAR"); return(VAR);}
 		printf("%d: %s", linenum++, buf);
 		buf[0] = '\0';
 		}
-
-{identifier}	{
-		tokenString("id",yytext);
-		char *id = (char*)malloc(sizeof(char)*strlen(yytext));
-		strcpy(id, yytext);
-		yylval.string = id; return(IDENTIFIER);
-		}
-
 
 \"[^\"\n\t]*\"	{
 		char c = input();

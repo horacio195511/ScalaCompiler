@@ -39,10 +39,7 @@ symtab *head;
 /* typed token */
 %token <fval> REAL
 %token <ival> NUMBER
-%token <string> TRUE FALSE
-%token <string> STRING_VAL 
-%token <string> IDENTIFIER
-%token <string> INT STRING BOOLEAN FLOAT BOOL
+%token <string> INT STRING BOOLEAN FLOAT BOOL CHAR IDENTIFIER STRING_VAL TRUE FALSE
 
 %type <string> type
 
@@ -54,10 +51,11 @@ symtab *head;
 %left '*' '/'
 %nonassoc UMINUS
 
+
 %start program
 
 %%
-program: 	OBJECT IDENTIFIER'{'declaration'}';
+program: 	OBJECT IDENTIFIER'{'declaration'}'	{Trace("reduce to program\n");};
 
 declaration:
 			constant_declaration				{Trace("reduce to constant declaration\n");}
@@ -75,6 +73,7 @@ constant_declaration:
 		|	VAL IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
 		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
 		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
+		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{insert(head, $2, $4);}
 		|	no_type_constant_declaration
 		;
 
@@ -90,6 +89,7 @@ variable_declaration:
 		|	VAR IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
 		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
 		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
+		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{insert(head, $2, $4);}
 		|	no_value_variable_declaration
 		;
 
@@ -136,39 +136,37 @@ simple_statement:
 		|	RETURN
 		;
 
-complex_statement:	complex_statement simple_statement | simple_statement;
 
 zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
 
-zms:	zms statement | zms complex_statement | ;
+zms:	zms statement | zms simple_statement | ;
 
-oms:	oms statement | oms complex_statement | statement | simple_statement ;
+oms:	oms statement | oms simple_statement | statement | simple_statement ;
 
 conditional_statement:
 			IF '(' boolean_expression ')' sab_statment						{Trace("Reduce to conditional statement\n");}
 		|	IF '(' boolean_expression ')' sab_statment ELSE sab_statment	{Trace("Reduce to conditional statement\n");}
 		;
 
-block_statement:
-			'{' zmvcd oms '}';
+block_statement:	'{' zmvcd oms '}';
 
-sab_statment:
-			simple_statement | block_statement
-		;
+sab_statment:	simple_statement | block_statement;
 
 loop_statement:	
 			WHILE '(' boolean_expression ')'sab_statment
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'sab_statment	{Trace("reduce to loop statement");}
 		;
 
-procedure_invocation:
-			IDENTIFIER '(' parameter_expression ')'
-		;
+procedure_invocation:	IDENTIFIER '(' parameter_expression ')'	
+						{
+							//recognize if the identifier's type is of method
+							symtab *target = lookup(head, $1);
+							if(strcmp(target->type, "method") != 0){
+								printf("identifier: %s is not a method\n", target->name);
+							}
+						};
 
-parameter_expression:
-			parameter_expression ',' value
-		|	value
-		;
+parameter_expression:	parameter_expression ',' value | value;
 
 value: NUMBER | REAL | STRING_VAL | IDENTIFIER;
 
@@ -184,16 +182,16 @@ expression:
 		;
 
 boolean_expression:	
-			value '<' value
-		|	value LESSEQUAL value
-		|	value LARGEEQUAL value
-		|	value '>' value
-		|	value EQUAL value
-		|	value NOTEQUAL value
-		|	bool AND bool
-		|	bool OR bool
-		|	'!' bool
-		|	value
+			expression '<' expression
+		|	expression LESSEQUAL expression
+		|	expression LARGEEQUAL expression
+		|	expression '>' expression
+		|	expression EQUAL expression
+		|	expression NOTEQUAL expression
+		|	boolean_expression AND boolean_expression
+		|	boolean_expression OR boolean_expression
+		|	'!' boolean_expression
+		|	bool
 		;
 %%
 
@@ -266,6 +264,7 @@ void dump(symtab *head){
 	// using nested printf to solve the type recognision problem
 	// currently only support int, float, char, string type
 	symtab *current = head;
+	printf("Symbol Table\n");
 	while(current->next !=  NULL){
 		printf("%s : %s\n", current->name, current->type);
 		current = current->next;
