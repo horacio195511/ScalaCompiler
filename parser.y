@@ -142,7 +142,7 @@ zms:	zms statement | zms simple_statement | ;
 oms:	oms statement | oms simple_statement | statement | simple_statement ;
 
 conditional_statement:
-			IF '(' boolean_expression ')' sab_statment						{Trace("Reduce to conditional statement\n");}
+			IF '(' boolean_expression ')' sab_statment
 		|	IF '(' boolean_expression ')' sab_statment ELSE sab_statment	{Trace("Reduce to conditional statement\n");}
 		;
 
@@ -168,7 +168,9 @@ parameter_expression:	parameter_expression ',' value | value | ;
 
 value: NUMBER | REAL | STRING_VAL | IDENTIFIER | procedure_invocation;
 
-bool: TRUE | FALSE | IDENTIFIER;
+bool: TRUE | FALSE | IDENTIFIER | procedure_invocation;
+
+boolorval: NUMBER | REAL | STRING | TRUE | FALSE | IDENTIFIER;
 
 num_expression:
 			num_expression '+' num_expression
@@ -184,8 +186,8 @@ boolean_expression:
 		|	num_expression LESSEQUAL num_expression
 		|	num_expression LARGEEQUAL num_expression
 		|	num_expression '>' num_expression
-		|	num_expression EQUAL num_expression
-		|	num_expression NOTEQUAL num_expression
+		|	boolorval EQUAL boolorval
+		|	boolorval NOTEQUAL boolorval
 		|	boolean_expression AND boolean_expression
 		|	boolean_expression OR boolean_expression
 		|	'!' boolean_expression
