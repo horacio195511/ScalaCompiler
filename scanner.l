@@ -82,7 +82,7 @@ var		{tokenKeyword("VAR"); return(VAR);}
 ==		{token("=="); return(EQUAL);}
 !=		{token("!="); return(NOTEQUAL);}
 &&		{token("&&"); return(AND);}
-\|\|		{token("||"); return(OR);}
+\|\|	{token("||"); return(OR);}
 !		{token("!"); return('!');}
 %		{token("%"); return('%');}
 

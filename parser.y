@@ -8,6 +8,8 @@ typedef struct symtab{
 	char *name;
 	// changeable: 0 to be const, 1 to be variable
 	char *type;
+	// for parameter type checking in method
+	char **parameter_type;
 	struct symtab *next;
 }symtab;
 
@@ -33,7 +35,7 @@ symtab *head;
 
 /* tokens */
 %token  BREAK CLASS CONTINUE DEF DO ELSE EXIT FOR IF TNULL WHILE OBJECT PRINT PRINTLN REPEAT RETURN TO READ
-%token  VAL VAR 
+%token  VAL VAR
 %token	LESSEQUAL LARGEEQUAL EQUAL NOTEQUAL AND OR
 
 /* typed token */
@@ -45,17 +47,16 @@ symtab *head;
 
 %left OR
 %left AND
-%left NOT
+%left '!'
 %left '<' '>' LESSEQUAL EQUAL LARGEEQUAL NOTEQUAL
 %left '+' '-'
 %left '*' '/'
 %nonassoc UMINUS
 
-
 %start program
 
 %%
-program: 	OBJECT IDENTIFIER'{'declaration'}'	{Trace("reduce to program\n");};
+program: 	OBJECT IDENTIFIER'{' declaration '}'	{Trace("reduce to program\n");};
 
 declaration:
 			constant_declaration				{Trace("reduce to constant declaration\n");}
@@ -93,7 +94,7 @@ variable_declaration:
 		|	no_value_variable_declaration
 		;
 
-no_value_variable_declaration: 
+no_value_variable_declaration:	
 			VAR IDENTIFIER ':' type		{insert(head, $2, $4);}
 		;
 
@@ -111,31 +112,28 @@ method_block:	'{'zmvcd zms'}';
 type:	FLOAT
 	| 	INT
 	|	STRING
+	|	CHAR
 	|	BOOLEAN 	{$$=$1;}
 	;
 
 formal_argument:
-			IDENTIFIER ':' type
+		|	IDENTIFIER ':' type
 		|	formal_argument ',' IDENTIFIER ':' type
-		|
 		;
 
 statement:
-			conditional_statement
-		|	loop_statement
+			conditional_statement | loop_statement
 		;
 		
 simple_statement:
-			IDENTIFIER '=' expression
-		|	IDENTIFIER '=' procedure_invocation
-		|	IDENTIFIER'['NUMBER']' '=' expression
-		|	PRINT '(' expression ')'
-		|	PRINTLN '(' expression ')'
+			IDENTIFIER '=' num_expression
+		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
+		|	PRINT '(' num_expression ')'
+		|	PRINTLN '(' num_expression ')'
 		|	READ IDENTIFIER
-		|	RETURN expression
 		|	RETURN
+		|	RETURN num_expression
 		;
-
 
 zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
 
@@ -166,28 +164,28 @@ procedure_invocation:	IDENTIFIER '(' parameter_expression ')'
 							}
 						};
 
-parameter_expression:	parameter_expression ',' value | value;
+parameter_expression:	parameter_expression ',' value | value | ;
 
-value: NUMBER | REAL | STRING_VAL | IDENTIFIER;
+value: NUMBER | REAL | STRING_VAL | IDENTIFIER | procedure_invocation;
 
 bool: TRUE | FALSE | IDENTIFIER;
 
-expression:
-		|	expression '+' expression
-		|	expression '-' expression
-		|	expression '*' expression
-		|	expression '/' expression
-		|	'-'expression
+num_expression:
+			num_expression '+' num_expression
+		|	num_expression '-' num_expression
+		|	num_expression '*' num_expression
+		|	num_expression '/' num_expression
+		|	'-' num_expression %prec UMINUS
 		|	value
 		;
 
 boolean_expression:	
-			expression '<' expression
-		|	expression LESSEQUAL expression
-		|	expression LARGEEQUAL expression
-		|	expression '>' expression
-		|	expression EQUAL expression
-		|	expression NOTEQUAL expression
+			num_expression '<' num_expression
+		|	num_expression LESSEQUAL num_expression
+		|	num_expression LARGEEQUAL num_expression
+		|	num_expression '>' num_expression
+		|	num_expression EQUAL num_expression
+		|	num_expression NOTEQUAL num_expression
 		|	boolean_expression AND boolean_expression
 		|	boolean_expression OR boolean_expression
 		|	'!' boolean_expression
