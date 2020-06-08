@@ -212,9 +212,14 @@ void main(int argc, char *argv[])
     yyin = fopen(argv[1], "r");         /* open input file */
 
     /* perform parsing */
-    if (yyparse() == 1)                 /* parsing */
-	yyerror("Parsing error !");     /* syntax error */
-	else dump(head);
+    if (yyparse() == 1){
+		yyerror("Parsing error !");     /* syntax error */
+	}
+	else{
+		// check if there is any main mehtod
+		if(lookup(head, "main") == NULL){ printf("There is no main function!!");}
+		dump(head);
+	}
 }
 
 symtab* create(){
