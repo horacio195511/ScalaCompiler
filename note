@@ -1,6 +1,0 @@
-Note for scala grammar:
-expression has two catagories: expression and boolean_expression
-expression's terminal only has int, float, string and identifier.
-boolean_expression's terminal has only true, false and identifier.
-
-the dangling else problem is not yet solved.

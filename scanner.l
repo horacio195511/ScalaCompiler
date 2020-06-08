@@ -5,17 +5,14 @@
 #include <stdio.h>
 #include "y.tab.h"
 
-#define LIST			strcat(buf,yytext)
-#define token(t)		{LIST; printf("<'%s'>\n",t);}
+#define LIST				strcat(buf,yytext)
+#define token(t)			{LIST; printf("<'%s'>\n",t);}
 #define tokenKeyword(t)		{LIST; printf("<%s>\n",t);}
 #define tokenInteger(t, i)	{LIST; printf("<%s:%d>\n",t,i);}
 #define tokenFloat(t,f)		{LIST; printf("<%s:%f>\n",t,f);}
 #define tokenString(t,s)	{LIST; printf("<%s:%s>\n",t,s);}
 
 #define MAX_LINE_LENG 256
-
-// to access pointer element in a struct, use -> operator
-int preleng;
 
 int linenum = 1;
 char buf[MAX_LINE_LENG];
@@ -33,7 +30,7 @@ letter		[a-zA-Z0-9]
 %x	COMMENT
 
 %%
-int		{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
+int			{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
 float		{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
 boolean		{tokenKeyword("BOOLEAN"); yylval.string = "boolean"; return(BOOLEAN);}
 string		{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
@@ -41,12 +38,12 @@ char		{tokenKeyword("CHAR"); yylval.string = "char"; return(CHAR);}
 break		{tokenKeyword("BREAK"); return(BREAK);}
 class		{tokenKeyword("CLASS"); return(CLASS);}
 continue	{tokenKeyword("CONTINUE"); return(CONTINUE);}
-def		{tokenKeyword("DEF"); return(DEF);}
-do		{tokenKeyword("DO"); return(DO);}
+def			{tokenKeyword("DEF"); return(DEF);}
+do			{tokenKeyword("DO"); return(DO);}
 else		{tokenKeyword("ELSE"); return(ELSE);}
 exit		{tokenKeyword("EXIT"); return(EXIT);}
-for		{tokenKeyword("FOR"); return(FOR);}
-if		{tokenKeyword("IF"); return(IF);}
+for			{tokenKeyword("FOR"); return(FOR);}
+if			{tokenKeyword("IF"); return(IF);}
 null		{tokenKeyword("NULL"); return(TNULL);}
 while		{tokenKeyword("WHILE"); return(WHILE);}
 object		{tokenKeyword("OBJECT"); return(OBJECT);}
@@ -54,61 +51,63 @@ print		{tokenKeyword("PRINT"); return(PRINT);}
 println		{tokenKeyword("PRINTLN"); return(PRINTLN);}
 repeat		{tokenKeyword("REPEAT"); return(REPEAT);}
 return		{tokenKeyword("RETURN"); return(RETURN);}
-to		{tokenKeyword("TO"); return(TO);}
+to			{tokenKeyword("TO"); return(TO);}
 read		{tokenKeyword("READ"); return(READ);}
 true		{tokenKeyword("TRUE"); return(TRUE);}
 false		{tokenKeyword("FALSE"); return(FALSE);}
-val		{tokenKeyword("VAL"); return(VAL);}
-var		{tokenKeyword("VAR"); return(VAR);}
-\,		{token(","); return(',');}
-\:		{token(":"); return(':');}
-\.		{token("."); return('.');}
-\;		{token(";"); return(';');}
-\(		{token("("); return('(');}
-\)		{token(")"); return(')');}
-\[		{token("["); return('[');}
-\]		{token("]"); return(']');}
-\{		{token("{"); return('{');}
-\}		{token("}"); return('}');}
-\+		{token("+"); return('+');}
-\-		{token("-"); return('-');}
-\*		{token("*"); return('*');}
-\/		{token("/"); return('/');}
-=		{token("=") ;return('=');}
-\<		{token("<"); return('<');}
-\<=		{token("<="); return(LESSEQUAL);}
->		{token(">"); return('>');}
->=		{token(">="); return(LARGEEQUAL);}
-==		{token("=="); return(EQUAL);}
-!=		{token("!="); return(NOTEQUAL);}
-&&		{token("&&"); return(AND);}
-\|\|	{token("||"); return(OR);}
-!		{token("!"); return('!');}
-%		{token("%"); return('%');}
+val			{tokenKeyword("VAL"); return(VAL);}
+var			{tokenKeyword("VAR"); return(VAR);}
+\,			{token(","); return(',');}
+\:			{token(":"); return(':');}
+\.			{token("."); return('.');}
+\;			{token(";"); return(';');}
+\(			{token("("); return('(');}
+\)			{token(")"); return(')');}
+\[			{token("["); return('[');}
+\]			{token("]"); return(']');}
+\{			{token("{"); return('{');}
+\}			{token("}"); return('}');}
+\+			{token("+"); return('+');}
+\-			{token("-"); return('-');}
+\*			{token("*"); return('*');}
+\/			{token("/"); return('/');}
+=			{token("=") ;return('=');}
+\<			{token("<"); return('<');}
+\<=			{token("<="); return(LESSEQUAL);}
+>			{token(">"); return('>');}
+>=			{token(">="); return(LARGEEQUAL);}
+==			{token("=="); return(EQUAL);}
+!=			{token("!="); return(NOTEQUAL);}
+&&			{token("&&"); return(AND);}
+\|\|		{token("||"); return(OR);}
+!			{token("!"); return('!');}
+%			{token("%"); return('%');}
 
 {number}	{tokenInteger("INT", atoi(yytext)); yylval.ival = atoi(yytext); return(NUMBER);}
 
 {real}		{tokenFloat("FLOAT", atof(yytext)); yylval.fval = atof(yytext); return(REAL);}
 
 {identifier}	{
-		tokenString("id",yytext);
-		char *id = (char*)malloc(sizeof(char)*strlen(yytext));
-		strcpy(id, yytext);
-		yylval.string = id; return(IDENTIFIER);
-		}
+				tokenString("id",yytext);
+				char *id = (char*)malloc(sizeof(char)*strlen(yytext));
+				strcpy(id, yytext);
+				yylval.string = id; return(IDENTIFIER);
+				}
 
 \n	{ 
 	LIST;
 	printf("%d: %s", linenum++, buf);
 	buf[0] = '\0';
+	// return newline for error handling in parser
+	return('\n');
 	}
 
 [ \t]*	{LIST;}
 
 ^\/\*	{
-	LIST;
-	BEGIN COMMENT;
-	}
+		LIST;
+		BEGIN COMMENT;
+		}
 
 <COMMENT>{
 \n	{
@@ -128,26 +127,26 @@ var		{tokenKeyword("VAR"); return(VAR);}
 }
 
 \/\/.*\n	{
-		// ignore all of the content
-		LIST;
-		printf("%d: %s", linenum++, buf);
-		buf[0] = '\0';
-		}
+			// ignore all of the content
+			LIST;
+			printf("%d: %s", linenum++, buf);
+			buf[0] = '\0';
+			}
 
 \"[^\"\n\t]*\"	{
-		char c = input();
-		unput(c);	/* just peeking */
-		if(c != '\"'){
-			// normal string
-			char *out = removeDoubleQuote(yytext,yyleng);
-			out = removeQuote(out);
-			buf[yyleng] = '\0';
-			yylval.string = out;
-			return(STRING_VAL);
-		}else{
-			yymore();
-		}
-		}
+					char c = input();
+					unput(c);	/* just peeking */
+					if(c != '\"'){
+						// normal string
+						char *out = removeDoubleQuote(yytext,yyleng);
+						out = removeQuote(out);
+						buf[yyleng] = '\0';
+						yylval.string = out;
+						return(STRING_VAL);
+					}else{
+						yymore();
+					}
+				}
 .	{
 	LIST;
 	printf("%d:%s\n", linenum+1, buf);

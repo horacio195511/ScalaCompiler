@@ -6,3 +6,7 @@ scala
 input.scala
 *.swo
 .vscode/launch.json
+testFile/example.scala
+testFile/fib.scala
+testFile/HelloWorld.scala
+testFile/sigma.scala
