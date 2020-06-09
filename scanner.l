@@ -98,8 +98,6 @@ var			{tokenKeyword("VAR"); return(VAR);}
 	LIST;
 	printf("%d: %s", linenum++, buf);
 	buf[0] = '\0';
-	// return newline for error handling in parser
-	return('\n');
 	}
 
 [ \t]*	{LIST;}

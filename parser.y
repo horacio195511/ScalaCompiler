@@ -83,7 +83,6 @@ no_type_constant_declaration:
 		|	VAL IDENTIFIER '=' NUMBER		{insert(head, $2, "int");}
 		|	VAL IDENTIFIER '=' BOOL			{insert(head, $2, "bool");}
 		|	VAL IDENTIFIER '=' STRING		{insert(head, $2, "string");}
-		|	error '\n'	{yyerror("constant declaration error");}
 		;
 
 variable_declaration:	
@@ -97,7 +96,6 @@ variable_declaration:
 
 no_value_variable_declaration:	
 			VAR IDENTIFIER ':' type		{insert(head, $2, $4);}
-		|	error '\n'	{yyerror("variable declaration error");}
 		;
 
 array_declaration:	
@@ -107,7 +105,6 @@ array_declaration:
 method_declaration:
 			DEF IDENTIFIER '(' formal_argument ')' method_block				{insert(head, $2, "method");}
 		|	DEF IDENTIFIER '(' formal_argument ')' ':' type method_block	{insert(head, $2, "method");}
-		|	error '\n'	{yyerror("method declaration error");}
 		;
 
 method_block:	'{'zmvcd zms'}';
@@ -183,7 +180,6 @@ num_expression:
 		|	num_expression '/' num_expression
 		|	'-' num_expression %prec UMINUS
 		|	value
-		|	error '\n'	{yyerror("num expression error");}
 		;
 
 boolean_expression:	
@@ -197,7 +193,6 @@ boolean_expression:
 		|	boolean_expression OR boolean_expression
 		|	'!' boolean_expression
 		|	bool
-		|	error '\n'	{yyerror("boolean expression error");}
 		;
 %%
 

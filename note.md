@@ -7,4 +7,3 @@ Other program including comment recognition remain unchange.
 ## Change to parser.y
 A new symbol table structure insertion, lookup, create function are created.
 I left the dangling else ambiguity unsolved, so there is one conflict.
-error handling is done by skipping following token.
