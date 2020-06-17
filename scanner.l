@@ -53,8 +53,8 @@ repeat		{tokenKeyword("REPEAT"); return(REPEAT);}
 return		{tokenKeyword("RETURN"); return(RETURN);}
 to			{tokenKeyword("TO"); return(TO);}
 read		{tokenKeyword("READ"); return(READ);}
-true		{tokenKeyword("TRUE"); return(TRUE);}
-false		{tokenKeyword("FALSE"); return(FALSE);}
+true		{tokenKeyword("TRUE"); yylval.bval = true; return(TRUE);}
+false		{tokenKeyword("FALSE"); yylval.bval = true; return(FALSE);}
 val			{tokenKeyword("VAL"); return(VAL);}
 var			{tokenKeyword("VAR"); return(VAR);}
 \,			{token(","); return(',');}
@@ -131,7 +131,7 @@ var			{tokenKeyword("VAR"); return(VAR);}
 			buf[0] = '\0';
 			}
 
-\"[^\"\n\t]*\"	{
+\"[^\"\n\t]+\"	{
 					char c = input();
 					unput(c);	/* just peeking */
 					if(c != '\"'){

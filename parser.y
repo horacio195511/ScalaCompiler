@@ -2,27 +2,44 @@
 #define Trace(t)        printf(t)
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
+// user defined structure usesd to store the index for each symbol table
+typedef struct symtabIndex{
+	char *name;
+	struct symtab *table;
+	struct symtabIndex *next;
+}symtabIndex;
+
 typedef struct symtab{
+	// the name of head is the name of symbol table
 	char *name;
 	// changeable: 0 to be const, 1 to be variable
 	char *type;
-	// for parameter type checking in method
-	char **parameter_type;
+	// for parameter type checking in method, null if the variable is not a method or a method
+	// with parameter
+	struct symtab *parameterList;
 	struct symtab *next;
 }symtab;
 
-symtab* create();
-void insert(symtab*, char*, char*);
-// (head, name, type)
-void dump(symtab*);
-symtab* lookup(symtab*, char*);
+// function for symtabIndes
+symtabIndex* symtabIndexCreate();
+void symtabIndexInsert(symtabIndex*, symtab*, char*);
+symtabIndex* symtabIndexLookup(symtabIndex*, char*);
+void symtabIndexDump(symtabIndex*);
+
+// function for symtab
+symtab* symtabCreate();
+void symtabInsert(symtab*, char*, char*);
+symtab* symtabLookup(symtab*, char*);
+void symtabDump(symtab*);
+
+// other function
 void yyerror(char*);
 extern int yylex(void);
-// parameter used for error handling
 extern int linenum;
-
+// head is point to the symbol table of current scope
 symtab *head;
 %}
 
@@ -30,6 +47,7 @@ symtab *head;
 %union {
 	float fval;
 	int ival;
+	bool bval;
 	char *string;
 }
 
@@ -223,16 +241,62 @@ void main(int argc, char *argv[])
 	}
 }
 
-symtab* create(){
-	symtab *head = (symtab*)malloc(sizeof(symtab));
+symtabIndex* symtabIndexCreate(){
+	// this function should be called in the main function
+	symtabIndex *head = (symtabIndex*)malloc(sizeof(symtabIndex));
 	head->next = NULL;
 	return head;
 }
 
-// generic insert function based on void pointer
-void insert(symtab *head, char *name, char *type){
+void symtabIndexInsert(symtabIndex *head, symtab *table, char *name){
 	/* check if the name is in the symbol table */
-	if(lookup(head, name) == NULL){
+	if(symtabIndexlookup(head, name) == NULL){
+	/* Insert in the end of linked list*/
+		symtab *current = head;
+		// go to the last element
+		while(current->next != NULL){
+			current = current->next;
+		}
+		// insert
+		symtabIndex *new = (symtabIndex*)malloc(sizeof(symtabIndex));
+		char *nname = (char*)malloc(sizeof(char)*strlen(name));
+		strcpy(nname, name);
+		new->name = nname;
+		new->next = NULL;
+		current->next = new;
+	}else{
+		printf("!!!This symbol table name is redifined!!!\n");
+	}
+}
+
+// return the address of searching id, or 0 if not found
+symtabIndex* symtabLookup(symtabIndex *head, char *name){
+	symtabIndex *current = head;
+	while(current->next != NULL){
+		if(strcmp(current->name, name) == 0){
+			return current;
+		}
+		current = current->next;
+	}
+	return NULL;
+}
+
+symtab* symtabCreate(char *name){
+	// this function shoudld be called when a new method is created or a new block is created.
+	// how should we name the if statement? According to is line number?
+	symtab *head = (symtab*)malloc(sizeof(symtab));
+	char *nname = (char*)malloc(sizeof(char)*strlen(name));
+	strcpy(nname, name);
+	head->name = nname;
+	head->next = NULL;
+	// insert the symtab in to symtabIndex
+
+	return head;
+}
+
+void symtabInsert(symtab *head, char *name, char *type, symtabIndex *parameterList){
+	/* check if the name is in the symbol table */
+	if(symtabLookup(head, name) == NULL){
 	/* Insert in the end of linked list*/
 		symtab *current = head;
 		// go to the last element
@@ -245,16 +309,18 @@ void insert(symtab *head, char *name, char *type){
 		char *ntype = (char*)malloc(sizeof(char)*strlen(type));
 		strcpy(nname, name);
 		strcpy(ntype, type);
-		current->name = nname;
-		current->type = ntype;
+		new->name = nname;
+		new->type = ntype;
+		new->parameterList = parameterList;
 		new->next = NULL;
 		current->next = new;
+	}else{
+		printf("!!!This symbol name is redifined!!!\n");
 	}
-
 }
 
 // return the address of searching id, or 0 if not found
-symtab* lookup(symtab *head, char *id){
+symtab* symtabLookup(symtab *head, char *id){
 	symtab *current = head;
 	while(current->next != NULL){
 		if(strcmp(current->name, id) == 0){
@@ -266,7 +332,7 @@ symtab* lookup(symtab *head, char *id){
 }
 
 // print the value of each node, with different type of value.
-void dump(symtab *head){
+void symtabDump(symtab *head){
 	// using nested printf to solve the type recognision problem
 	// currently only support int, float, char, string type
 	symtab *current = head;

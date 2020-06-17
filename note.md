@@ -5,5 +5,6 @@ Return the token defined in parser.y for each token
 A new symbol table structure and insertion, lookup, create function is created.
 Other program including comment recognition remain unchange. 
 ## Change to parser.y
-A new symbol table structure insertion, lookup, create function are created.
-I left the dangling else ambiguity unsolved, so there is one conflict.
+Add parameter type checking
+Add expression type checking
+Create a seperate symbol table for each scope: function, loop, if statement or any block statement. The head parameter would point to the current symbol table for each scope.
