@@ -12,35 +12,46 @@ typedef struct symtabIndex{
 	struct symtabIndex *next;
 }symtabIndex;
 
+// symbol table structure to store symbol in each scope
 typedef struct symtab{
-	// the name of head is the name of symbol table
 	char *name;
-	// changeable: 0 to be const, 1 to be variable
 	char *type;
-	// for parameter type checking in method, null if the variable is not a method or a method
-	// with parameter
 	struct symtab *parameterList;
 	struct symtab *next;
 }symtab;
 
-// function for symtabIndes
+// really basic linken list sturcture, mostly for type checking
+typedef struct listnode{
+	char *val;
+	struct listnode *next;
+}listnode;
+
+// function for symtabIndex
 symtabIndex* symtabIndexCreate();
 void symtabIndexInsert(symtabIndex*, symtab*, char*);
 symtabIndex* symtabIndexLookup(symtabIndex*, char*);
 void symtabIndexDump(symtabIndex*);
 
 // function for symtab
-symtab* symtabCreate();
-void symtabInsert(symtab*, char*, char*);
+symtab* symtabCreate(char*, symtabIndex*);
+void symtabInsert(symtab*, char*, char*, listnode*);
 symtab* symtabLookup(symtab*, char*);
 void symtabDump(symtab*);
+
+// function for linked list
+listnode* listnodeCreate();
+void listnodeInsert(listnode*, char*);
+listnode* listnodeLookup(listnode*, char*);
+void listnodeDump(listnode*);
 
 // other function
 void yyerror(char*);
 extern int yylex(void);
 extern int linenum;
 // head is point to the symbol table of current scope
-symtab *head;
+symtabIndex *symtabIndexHead;
+symtab *symtabHead;
+listnode *listnodeHead;
 %}
 
 /* data type definition */
@@ -49,6 +60,7 @@ symtab *head;
 	int ival;
 	bool bval;
 	char *string;
+	struct listnode *listnode;
 }
 
 /* tokens */
@@ -61,7 +73,8 @@ symtab *head;
 %token <ival> NUMBER
 %token <string> INT STRING BOOLEAN FLOAT BOOL CHAR IDENTIFIER STRING_VAL TRUE FALSE
 
-%type <string> type
+%type <string> type value num_expression procedure_invocation
+%type <listnode> parameter_expression formal_argument
 
 %left OR
 %left AND
@@ -74,7 +87,7 @@ symtab *head;
 %start program
 
 %%
-program: 	OBJECT IDENTIFIER'{' declaration '}'	{Trace("reduce to program\n");};
+program: 	OBJECT IDENTIFIER'{' declaration '}'	{symtabHead = symtabCreate(symtabHead, $2); Trace("reduce to program\n");};
 
 declaration:
 			constant_declaration				{Trace("reduce to constant declaration\n");}
@@ -88,41 +101,41 @@ declaration:
 		;
 
 constant_declaration:
-			VAL IDENTIFIER ':' FLOAT '=' REAL			{insert(head, $2, $4);}
-		|	VAL IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
-		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{insert(head, $2, $4);}
+			VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(symtabHead, $2, $4, NULL);}
 		|	no_type_constant_declaration
 		;
 
 no_type_constant_declaration:
-			VAL IDENTIFIER '=' REAL			{insert(head, $2, "float");}
-		|	VAL IDENTIFIER '=' NUMBER		{insert(head, $2, "int");}
-		|	VAL IDENTIFIER '=' BOOL			{insert(head, $2, "bool");}
-		|	VAL IDENTIFIER '=' STRING		{insert(head, $2, "string");}
+			VAL IDENTIFIER '=' REAL			{symtabInsert(symtabHead, $2, "float", NULL);}
+		|	VAL IDENTIFIER '=' NUMBER		{symtabInsert(symtabHead, $2, "int", NULL);}
+		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(symtabHead, $2, "bool", NULL);}
+		|	VAL IDENTIFIER '=' STRING		{symtabInsert(symtabHead, $2, "string", NULL);}
 		;
 
 variable_declaration:	
-			VAR IDENTIFIER ':' FLOAT '=' REAL			{insert(head, $2, $4);}
-		|	VAR IDENTIFIER ':' INT '=' NUMBER			{insert(head, $2, $4);}
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{insert(head, $2, $4);}
-		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{insert(head, $2, $4);}
-		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{insert(head, $2, $4);}
+			VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(symtabHead, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(symtabHead, $2, $4, NULL);}
 		|	no_value_variable_declaration
 		;
 
 no_value_variable_declaration:	
-			VAR IDENTIFIER ':' type		{insert(head, $2, $4);}
+			VAR IDENTIFIER ':' type		{symtabInsert(symtabHead, $2, $4, NULL);}
 		;
 
 array_declaration:	
-			VAR IDENTIFIER ':' type '[' NUMBER ']'		{insert(head, $2, $4);}
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(symtabHead, $2, $4, NULL);}
 		; 
 
 method_declaration:
-			DEF IDENTIFIER '(' formal_argument ')' method_block				{insert(head, $2, "method");}
-		|	DEF IDENTIFIER '(' formal_argument ')' ':' type method_block	{insert(head, $2, "method");}
+			DEF IDENTIFIER '(' formal_argument ')' method_block				{symtabInsert(symtabHead, $2, "NULL", $4); listnodeHead = listnodeCreate();}
+		|	DEF IDENTIFIER '(' formal_argument ')' ':' type method_block	{symtabInsert(symtabHead, $2, $7, $4); listnodeHead = listnodeCreate();}
 		;
 
 method_block:	'{'zmvcd zms'}';
@@ -135,8 +148,9 @@ type:	FLOAT
 	;
 
 formal_argument:
-		|	IDENTIFIER ':' type
-		|	formal_argument ',' IDENTIFIER ':' type
+		{$$=NULL;}
+		|	IDENTIFIER ':' type							{listnodeInsert(listnodeHead, $3); $$=listnodeHead;}
+		|	formal_argument ',' IDENTIFIER ':' type		{listnodeInsert(listnodeHead, $5);}
 		;
 
 statement:
@@ -144,7 +158,7 @@ statement:
 		;
 		
 simple_statement:
-			IDENTIFIER '=' num_expression
+			IDENTIFIER '=' num_expression					{symtab *symbol = symtabLookup(symtabHead, $1); if(strcmp(symbol->type, $3) != 0) printf("!!!type mismatch!!!\n");}
 		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
 		|	PRINT '(' num_expression ')'
 		|	PRINTLN '(' num_expression ')'
@@ -177,27 +191,35 @@ loop_statement:
 procedure_invocation:	IDENTIFIER '(' parameter_expression ')'	
 						{
 							//recognize if the identifier's type is of method
-							symtab *target = lookup(head, $1);
-							if(strcmp(target->type, "method") != 0){
-								yyerror("invocation of non mehtod identifier");
-							}
+							symtab *target = symtabLookup(symtabHead, $1);
+							$$ = target->type;
 						};
 
-parameter_expression:	parameter_expression ',' value | value | ;
+parameter_expression:
+						parameter_expression ',' value 		{listnodeInsert(listnodeHead, $3);}
+					|	value 								{listnodeInsert(listnodeHead, $1); $$ = listnodeHead;}
+					| 	{$$=NULL;}
+					;
 
-value: NUMBER | REAL | STRING_VAL | IDENTIFIER | procedure_invocation;
+value: 
+		NUMBER 					{$$="int";}
+	| 	REAL 					{$$="float";}
+	|	STRING_VAL 				{$$="string";}
+	|	IDENTIFIER 				{symtab *symbol=symtabLookup(symtabIndexHead, $1); $$=symbol->type;};
+	|	procedure_invocation	{$$=$1;}
+	;
 
 bool: TRUE | FALSE | IDENTIFIER | procedure_invocation;
 
 boolorval: NUMBER | REAL | STRING | TRUE | FALSE | IDENTIFIER;
 
 num_expression:
-			num_expression '+' num_expression
-		|	num_expression '-' num_expression
-		|	num_expression '*' num_expression
-		|	num_expression '/' num_expression
-		|	'-' num_expression %prec UMINUS
-		|	value
+			num_expression '+' num_expression	{if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!"); else $$=$1;}
+		|	num_expression '-' num_expression	{if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!"); else $$=$1;}
+		|	num_expression '*' num_expression	{if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!"); else $$=$1;}
+		|	num_expression '/' num_expression	{if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!"); else $$=$1;}
+		|	'-' num_expression %prec UMINUS		{$$ = $2;}
+		|	value	{$$ = $1;}
 		;
 
 boolean_expression:	
@@ -227,17 +249,16 @@ void main(int argc, char *argv[])
 	printf ("Usage: sc filename\n");
 	exit(1);
     }
-    head = create();
+	// symtab index initialized here
     yyin = fopen(argv[1], "r");         /* open input file */
-
+	symtabIndexHead = symtabIndexCreate();
     /* perform parsing */
     if (yyparse() == 1){
 		yyerror("Parsing error !");     /* syntax error */
 	}
 	else{
 		// check if there is any main mehtod
-		if(lookup(head, "main") == NULL){ printf("There is no main function!!");}
-		dump(head);
+		symtabIndexDump(symtabIndexHead);
 	}
 }
 
@@ -250,18 +271,16 @@ symtabIndex* symtabIndexCreate(){
 
 void symtabIndexInsert(symtabIndex *head, symtab *table, char *name){
 	/* check if the name is in the symbol table */
-	if(symtabIndexlookup(head, name) == NULL){
-	/* Insert in the end of linked list*/
+	if(symtabIndexLookup(head, name) == NULL){
 		symtab *current = head;
-		// go to the last element
 		while(current->next != NULL){
 			current = current->next;
 		}
-		// insert
 		symtabIndex *new = (symtabIndex*)malloc(sizeof(symtabIndex));
 		char *nname = (char*)malloc(sizeof(char)*strlen(name));
 		strcpy(nname, name);
 		new->name = nname;
+		new->table = table;
 		new->next = NULL;
 		current->next = new;
 	}else{
@@ -270,7 +289,7 @@ void symtabIndexInsert(symtabIndex *head, symtab *table, char *name){
 }
 
 // return the address of searching id, or 0 if not found
-symtabIndex* symtabLookup(symtabIndex *head, char *name){
+symtabIndex* symtabIndexLookup(symtabIndex *head, char *name){
 	symtabIndex *current = head;
 	while(current->next != NULL){
 		if(strcmp(current->name, name) == 0){
@@ -281,7 +300,19 @@ symtabIndex* symtabLookup(symtabIndex *head, char *name){
 	return NULL;
 }
 
-symtab* symtabCreate(char *name){
+// print the value of each node, with different type of value.
+void symtabIndexDump(symtabIndex *head){
+	// using nested printf to solve the type recognision problem
+	// currently only support int, float, char, string type
+	symtabIndex *current = head;
+	printf("Symbol Table List\n");
+	while(current->next !=  NULL){
+		printf("%s\n", current->name);
+		current = current->next;
+	}
+}
+
+symtab* symtabCreate(char *name, symtabIndex *symtabIndexHead){
 	// this function shoudld be called when a new method is created or a new block is created.
 	// how should we name the if statement? According to is line number?
 	symtab *head = (symtab*)malloc(sizeof(symtab));
@@ -290,11 +321,11 @@ symtab* symtabCreate(char *name){
 	head->name = nname;
 	head->next = NULL;
 	// insert the symtab in to symtabIndex
-
+	symtabIndexInsert(symtabIndexHead, head, name);
 	return head;
 }
 
-void symtabInsert(symtab *head, char *name, char *type, symtabIndex *parameterList){
+void symtabInsert(symtab *head, char *name, char *type, listnode *parameterList){
 	/* check if the name is in the symbol table */
 	if(symtabLookup(head, name) == NULL){
 	/* Insert in the end of linked list*/
@@ -339,6 +370,50 @@ void symtabDump(symtab *head){
 	printf("Symbol Table\n");
 	while(current->next !=  NULL){
 		printf("%s : %s\n", current->name, current->type);
+		current = current->next;
+	}
+}
+
+listnode* listnodeCreate(){
+	// this function should be called in the main function
+	listnode *head = (listnode*)malloc(sizeof(listnode));
+	head->next = NULL;
+	return head;
+}
+
+void listnodeInsert(listnode *head, char *val){
+	/* check if the name is in the symbol table */
+	/* Insert in the end of linked list*/
+	listnode *current = head;
+	// go to the last element
+	while(current->next != NULL){
+		current = current->next;
+	}
+	// insert
+	listnode *new = (listnode*)malloc(sizeof(listnode));
+	char *nval = (char*)malloc(sizeof(char)*strlen(val));
+	strcpy(nval, val);
+	new->val = val;
+	new->next = NULL;
+	current->next = new;
+}
+listnode* listnodeLookup(listnode *head, char *val){
+	listnode *current = head;
+	while(current->next != NULL){
+		if(strcmp(current->val, val) == 0){
+			return current;
+		}
+		current = current->next;
+	}
+	return NULL;
+}
+void listnodeDump(listnode *head){
+	// using nested printf to solve the type recognision problem
+	// currently only support int, float, char, string type
+	listnode *current = head;
+	printf("list node\n");
+	while(current->next !=  NULL){
+		printf("%s\n", current->val);
 		current = current->next;
 	}
 }

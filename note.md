@@ -1,9 +1,6 @@
 # B10504028 Compiler Design Project 2
 ## Change to scanner.l
-I reserve the original functionality that print one line after a token is recognize for simplicity of debugging.
-Return the token defined in parser.y for each token
-A new symbol table structure and insertion, lookup, create function is created.
-Other program including comment recognition remain unchange. 
+scanner remain unchange, and still capable of recognize all of the token unused for debug.
 ## Change to parser.y
 Add parameter type checking
 Add expression type checking
