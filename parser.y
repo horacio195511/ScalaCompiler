@@ -44,13 +44,20 @@ void listnodeInsert(listnode*, char*);
 listnode* listnodeLookup(listnode*, char*);
 void listnodeDump(listnode*);
 
+// scope rule
+symtab* scopeLookup(symtab*, symtab*, char*);
+int listcmp(listnode*, listnode*);
+
 // other function
 void yyerror(char*);
 extern int yylex(void);
 extern int linenum;
 // head is point to the symbol table of current scope
 symtabIndex *symtabIndexHead;
-symtab *symtabHead;
+// for global symtab
+symtab *globalSymtab;
+// for local symtab
+symtab *localSymtab;
 listnode *listnodeHead;
 // string used to remember the last scope
 char *lastScope;
@@ -89,7 +96,7 @@ char *lastScope;
 %start program
 
 %%
-program: 	OBJECT IDENTIFIER {symtabHead = symtabCreate($2, symtabIndexHead); lastScope=$2;} '{' declaration '}'	{Trace("reduce to program\n");};
+program: 	OBJECT IDENTIFIER {globalSymtab = symtabCreate($2, symtabIndexHead); localSymtab=globalSymtab;} '{' declaration '}'	{Trace("reduce to program\n");};
 
 declaration:
 			constant_declaration				{Trace("reduce to constant declaration\n");}
@@ -103,56 +110,54 @@ declaration:
 		;
 
 constant_declaration:
-			VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(symtabHead, $2, $4, NULL);}
+			VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, NULL);}
 		|	no_type_constant_declaration
 		;
 
 no_type_constant_declaration:
-			VAL IDENTIFIER '=' REAL			{symtabInsert(symtabHead, $2, "float", NULL);}
-		|	VAL IDENTIFIER '=' NUMBER		{symtabInsert(symtabHead, $2, "int", NULL);}
-		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(symtabHead, $2, "bool", NULL);}
-		|	VAL IDENTIFIER '=' STRING		{symtabInsert(symtabHead, $2, "string", NULL);}
+			VAL IDENTIFIER '=' REAL			{symtabInsert(localSymtab, $2, "float", NULL);}
+		|	VAL IDENTIFIER '=' NUMBER		{symtabInsert(localSymtab, $2, "int", NULL);}
+		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(localSymtab, $2, "bool", NULL);}
+		|	VAL IDENTIFIER '=' STRING		{symtabInsert(localSymtab, $2, "string", NULL);}
 		;
 
 variable_declaration:	
-			VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAR IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(symtabHead, $2, $4, NULL);}
-		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(symtabHead, $2, $4, NULL);}
+			VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, NULL);}
+		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, NULL);}
 		|	no_value_variable_declaration
 		;
 
 no_value_variable_declaration:	
-			VAR IDENTIFIER ':' type		{symtabInsert(symtabHead, $2, $4, NULL);}
+			VAR IDENTIFIER ':' type		{symtabInsert(localSymtab, $2, $4, NULL);}
 		;
 
 array_declaration:	
-			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(symtabHead, $2, $4, NULL);}
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(localSymtab, $2, $4, NULL);}
 		; 
 
 method_declaration:
 			DEF IDENTIFIER 
 			{	
-				symtabHead = symtabCreate($2, symtabIndexHead);
+				localSymtab = symtabCreate($2, symtabIndexHead);
 				listnodeHead = listnodeCreate();
 			}
 	 		'(' formal_argument ')' type_exp method_block 
 			{
-				 symtabInsert(symtabHead, $2, $7, $5);
-				 symtabIndex *index = symtabIndexLookup(symtabIndexHead, lastScope);
-				 symtabHead = index->table;
+				 symtabInsert(globalSymtab, $2, $7, $5);
 			}
 		;
 
 formal_argument:
 			{$$=NULL;}
-		|	IDENTIFIER ':' type							{symtabInsert(symtabHead, $1, $3, NULL); listnodeInsert(listnodeHead, $3); $$=listnodeHead;}
-		|	formal_argument ',' IDENTIFIER ':' type		{symtabInsert(symtabHead, $3, $5, NULL); listnodeInsert(listnodeHead, $5);}
+		|	IDENTIFIER ':' type							{symtabInsert(localSymtab, $1, $3, NULL); listnodeInsert(listnodeHead, $3); $$=listnodeHead;}
+		|	formal_argument ',' IDENTIFIER ':' type		{symtabInsert(localSymtab, $3, $5, NULL); listnodeInsert(listnodeHead, $5);}
 		;
 
 type_exp:
@@ -174,7 +179,7 @@ statement:
 		;
 		
 simple_statement:
-			IDENTIFIER '=' num_expression	{symtab *symbol = symtabLookup(symtabHead, $1); if(strcmp(symbol->type, $3) != 0) printf("!!!type mismatch!!!\n");}
+			IDENTIFIER '=' num_expression	{symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1); if(strcmp(symbol->type, $3) != 0) printf("!!!type mismatch!!!\n");}
 		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
 		|	PRINT '(' num_expression ')'
 		|	PRINTLN '(' num_expression ')'
@@ -208,15 +213,11 @@ procedure_invocation:	IDENTIFIER '(' parameter_expression ')'
 						{
 							//recognize if the identifier's type is of method
 							// some of the function should lookup in the program scope
-							symtab *symbol = symtabLookup(symtabHead, $1);
+							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+							if(symbol == NULL){yyerror("!!!couldn't resolve the symbol!!!\n");}
 							listnode *idParam = symbol->parameterList;
 							listnode *inputParam = $3;
-							// type checking
-							while(inputParam->next != NULL || idParam->next != NULL){
-								idParam = idParam->next;
-								inputParam = inputParam->next;
-								if(strcmp(idParam->val, inputParam->val) != 0) printf("!!!Type mismatch!!!\n");
-							}
+							if(listcmp(idParam, inputParam) != 0){printf("!!!Type mismatch!!!\n");}
 							$$ = symbol->type;
 						};
 
@@ -231,20 +232,7 @@ value:
 	| 	REAL 					{$$="float";}
 	|	STRING_VAL 				{$$="string";}
 	|	IDENTIFIER 				{
-									printf("--an id--\n");
-									// lookup at the present scope
-									symtab *symbol=symtabLookup(symtabHead, $1);
-									// didn't find it in curret scope
-									if(symbol == NULL){
-										//lookup at the last scope
-										char *current = symtabHead->name;
-										symtabIndex *index = symtabIndexLookup(symtabIndexHead, lastScope);
-										symbol = symtabLookup(index->table, $1);
-										if(symbol == NULL) printf("!!!Input id doesn't exist in current and last scope!!!");
-										// return to current scope
-										index = symtabIndexLookup(symtabIndexHead, current);
-										symtabHead = index->table;
-									}
+									symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 									$$=symbol->type;
 								}
 	|	procedure_invocation	{$$=$1;}
@@ -459,4 +447,47 @@ void listnodeDump(listnode *head){
 		printf("%s\n", current->val);
 		current = current->next;
 	}
+}
+
+//scope rule: global and local, return symbol pointer if the symbol is valid
+// return NULL if the symbol is invalid, accompany with an error message
+symtab* scopeLookup(symtab *global, symtab *local, char *name){
+	// search 
+	// local lookup
+	symtab *symbol=symtabLookup(local, name);
+	if(symbol == NULL){
+		// global lookup
+		symbol = symtabLookup(global, name);
+		if(symbol == NULL){
+			printf("!!!Input id doesn't exist in local or global scope!!!");
+			return NULL;
+		}else{
+			return symbol;
+		}
+	}else{
+		return symbol;
+	}
+}
+
+// list cmp, return 0 if all elements are the same, other means not the same
+// length are not the same: l1=null, l2!=null or vice versa
+int listcmp(listnode *l1, listnode *l2){
+	int result = 0;
+	while(l1->next != NULL){
+		// of the same length
+		if(l1->next != NULL && l2->next != NULL){
+			if(strcmp(l1->val, l2->val) != 0)result++;
+			l1 = l1->next;
+			l2 = l2->next;
+		}else if(l1->next != NULL && l2->next == NULL){
+			printf("!!!Length of Parameter aren't the same!!!\n");
+			return ++result;
+		}else if(l1->next == NULL && l2->next != NULL){
+			printf("!!!Length of Parameter aren't the same!!!\n");
+			return ++result;
+		}else{
+			if(strcmp(l1->val, l2->val) != 0)result++;
+		}
+	}
+	return result;
 }
