@@ -336,8 +336,8 @@ void symtabIndexDump(symtabIndex *head){
 	symtabIndex *current = head;
 	printf("Symbol Table List\n");
 	while(current->next !=  NULL){
-		printf("%s\n", current->name);
 		current = current->next;
+		printf("%s\n", current->name);
 	}
 }
 
