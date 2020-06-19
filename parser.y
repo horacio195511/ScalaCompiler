@@ -475,10 +475,10 @@ int listcmp(listnode *l1, listnode *l2){
 	int result = 0;
 	while(l1->next != NULL){
 		// of the same length
+		l1 = l1->next;
+		l2 = l2->next;
 		if(l1->next != NULL && l2->next != NULL){
 			if(strcmp(l1->val, l2->val) != 0)result++;
-			l1 = l1->next;
-			l2 = l2->next;
 		}else if(l1->next != NULL && l2->next == NULL){
 			printf("!!!Length of Parameter aren't the same!!!\n");
 			return ++result;
