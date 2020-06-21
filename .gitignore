@@ -6,13 +6,6 @@ scala
 input.scala
 *.swo
 .vscode/launch.json
-testFile/example.scala
-testFile/fib.scala
-testFile/HelloWorld.scala
-testFile/sigma.scala
-parser.y
-other/test.sh
-other/hey.scala
-other/example.scala
-other/double_pointer.c
-other/double_pointer
+target.javac
+other/*
+testFile/*

@@ -16,7 +16,8 @@
 
 int linenum = 1;
 char buf[MAX_LINE_LENG];
-// SYMBOL TABLE definition
+extern FILE *outputFile;
+// function comment processing
 char* strupr(char*);
 char* strdel(int, char*);
 char* removeQuote(char*);
@@ -83,52 +84,63 @@ var			{tokenKeyword("VAR"); return(VAR);}
 !			{token("!"); return('!');}
 %			{token("%"); return('%');}
 
-{number}	{tokenInteger("INT", atoi(yytext)); yylval.ival = atoi(yytext); return(NUMBER);}
+{number}	{
+				tokenInteger("INT", atoi(yytext));
+				yylval.ival = atoi(yytext);
+				return(NUMBER);
+			}
 
-{real}		{tokenFloat("FLOAT", atof(yytext)); yylval.fval = atof(yytext); return(REAL);}
+{real}		{
+				tokenFloat("FLOAT", atof(yytext));
+				yylval.fval = atof(yytext);
+				return(REAL);
+			}
 
 {identifier}	{
-				tokenString("id",yytext);
-				char *id = (char*)malloc(sizeof(char)*strlen(yytext));
-				strcpy(id, yytext);
-				yylval.string = id; return(IDENTIFIER);
+					tokenString("id",yytext);
+					char *id = (char*)malloc(sizeof(char)*strlen(yytext));
+					strcpy(id, yytext);
+					yylval.string = id; return(IDENTIFIER);
 				}
 
 \n	{ 
-	LIST;
-	printf("%d: %s", linenum++, buf);
-	buf[0] = '\0';
+		fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
+		LIST;
+		printf("%d: %s", linenum++, buf);
+		buf[0] = '\0';
 	}
 
 [ \t]*	{LIST;}
 
 ^\/\*	{
-		LIST;
-		BEGIN COMMENT;
+			LIST;
+			BEGIN COMMENT;
 		}
 
 <COMMENT>{
 \n	{
-	LIST;
-	printf("%d: %s", linenum++, buf);
-	buf[0] = '\0';
+		fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
+		LIST;
+		printf("%d: %s", linenum++, buf);
+		buf[0] = '\0';
 	}
 
 \*\/\n$	{
-	LIST;
-	printf("%d: %s", linenum++, buf);
-	buf[0] = '\0';
-	BEGIN(INITIAL);
-	}
+			fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
+			LIST;
+			printf("%d: %s", linenum++, buf);
+			buf[0] = '\0';
+			BEGIN(INITIAL);
+		}
 
 .	{LIST;}
 }
 
 \/\/.*\n	{
-			// ignore all of the content
-			LIST;
-			printf("%d: %s", linenum++, buf);
-			buf[0] = '\0';
+				// ignore all of the content
+				LIST;
+				printf("%d: %s", linenum++, buf);
+				buf[0] = '\0';
 			}
 
 \"[^\"\n\t]+\"	{
@@ -146,12 +158,13 @@ var			{tokenKeyword("VAR"); return(VAR);}
 					}
 				}
 .	{
-	LIST;
-	printf("%d:%s\n", linenum+1, buf);
-	printf("bad character:'%s'\n", yytext);
-	exit(-1);
+		LIST;
+		printf("%d:%s\n", linenum+1, buf);
+		printf("bad character:'%s'\n", yytext);
+		exit(-1);
 	}
 %%
+
 // convert letter to upper case
 char* strupr(char *str){
     // we dynamic allocate memory space for the output string

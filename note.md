@@ -5,3 +5,4 @@ scanner remain unchange, and still capable of recognize all of the token unused 
 Add parameter type checking
 Add expression type checking
 Create a seperate symbol table for each scope: function, loop, if statement or any block statement. The head parameter would point to the current symbol table for each scope.
+Add one more value property in the symtab structure for handling constant variable. For local variable, the reference number would be store here.
