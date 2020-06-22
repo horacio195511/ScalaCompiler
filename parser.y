@@ -17,7 +17,7 @@ typedef struct symtab{
 	char *name;
 	char *type;
 	bool changeable;
-	int *value;
+	int value;
 	struct listnode *parameterList;
 	struct symtab *next;
 }symtab;
@@ -58,6 +58,7 @@ extern int linenum;
 
 // bytecode generation
 char* loadSymbol(symtab*, symtab*, char*);
+char* storeSymbol(symtab*, symtab*, char*, int);
 
 // head is point to the symbol table of current scope
 symtabIndex *symtabIndexHead;
@@ -94,9 +95,8 @@ int localRef;
 %token <ival> NUMBER
 %token <string> INT STRING BOOLEAN FLOAT BOOL CHAR IDENTIFIER STRING_VAL TRUE FALSE
 
-%type <string> type type_exp procedure_invocation boolorval
+%type <string> type type_exp procedure_invocation boolorval value num_expression
 %type <listnode> parameter_expression formal_argument
-%type <typedval> num_expression
 
 %left OR
 %left AND
@@ -206,25 +206,28 @@ method_declaration:
 	 		'(' formal_argument ')' type_exp method_block 
 			{
 				fprintf(outputFile, "}\n");
-				symtabInsert(globalSymtab, $2, $7, false, 0, $5);
+				localSymtab = globalSymtab;
+				symtabInsert(localSymtab, $2, $7, false, 0, $5);
 			}
 		;
 
 formal_argument:
-			{$$=NULL;}
+			formal_argument ',' IDENTIFIER ':' type		{
+															fprintf(outputFile, "%s, ",$5);
+															symtabInsert(localSymtab, $3, $5, true, 0, NULL);
+															// type checking
+															listnodeInsert(listnodeHead, $5);
+															localRef++;
+														}
 		|	IDENTIFIER ':' type							{
 															fprintf(outputFile, "%s ", $3);
 															symtabInsert(localSymtab, $1, $3, true, 0, NULL);
+															// type checking
 															listnodeInsert(listnodeHead, $3);
 															localRef++;
 															$$=listnodeHead;
 														}
-		|	formal_argument ',' IDENTIFIER ':' type		{
-															fprintf(outputFile, "%s, ",$5);
-															symtabInsert(localSymtab, $3, $5, true, 0, NULL);
-															listnodeInsert(listnodeHead, $5);
-															localRef++;
-														}
+		|	{$$=NULL;}
 		;
 
 type_exp:
@@ -250,11 +253,7 @@ simple_statement:
 			IDENTIFIER '=' num_expression	{
 												symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 												// value assignment
-												if(symbol->changeable != false){
-													if(strcmp(symbol->type, "int") == 0){
-														fprintf(outputFile, "putstatic int %s.%s");
-													}
-												}
+												storeSymbol(globalSymtab, localSymtab, symbol->name, localRef);
 											}
 		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
 		|	PRINT 
@@ -263,21 +262,29 @@ simple_statement:
 			}		
 			'(' num_expression ')'	
 			{
-				if(strlen($4.type) == 0){
+				if(strcmp($4, "int") == 0){
 					// type = string
 					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(int)\n");
 				}else{
 					// type = int
-					fprintf(outputFile, "ldc")
 					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(java.lang.String)\n");
 				}
 				
 			}
 		|	PRINTLN '(' num_expression ')'
+			{
+				if(strcmp($3, "int") == 0){
+					// type = string
+					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(int)\n");
+				}else{
+					// type = int
+					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(java.lang.String)\n");
+				}
+				
+			}
 		|	READ IDENTIFIER
-		|	RETURN	{fprintf(outputFile, "return\n");}
-		|	RETURN num_expression	{fprintf(outputFile, "ireturn %d\n", $2);}
-		|	error '\n'	{yyerror("statement error");}
+		|	RETURN					{fprintf(outputFile, "return\n");}
+		|	RETURN num_expression	{fprintf(outputFile, "ireturn\n");}
 		;
 
 zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
@@ -287,8 +294,21 @@ zms:	zms statement | zms simple_statement | ;
 oms:	oms statement | oms simple_statement | statement | simple_statement ;
 
 conditional_statement:
-			IF '(' boolean_expression ')' sab_statment
-		|	IF '(' boolean_expression ')' sab_statment ELSE sab_statment	{Trace("Reduce to conditional statement\n");}
+			IF '(' boolean_expression ')'
+			{fprintf(outputFile, "Lfalse\n");}
+			sab_statment
+			{fprintf(outputFile, "Lfalse:\n");}
+		|	IF '(' boolean_expression ')'
+			{fprintf(outputFile, "Lfalse\n");}
+			sab_statment 
+			{fprintf(outputFile, "goto Lexit\n");}
+			ELSE
+			{fprintf(outputFile, "Lfalse:\n");}
+			sab_statment
+			{
+				fprintf(outputFile, "Lexit:");
+				Trace("Reduce to conditional statement\n");
+			}
 		;
 
 block_statement:	'{' zmvcd oms '}';
@@ -296,22 +316,70 @@ block_statement:	'{' zmvcd oms '}';
 sab_statment:	simple_statement | block_statement;
 
 loop_statement:	
-			WHILE '(' boolean_expression ')'sab_statment
-		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'sab_statment	{Trace("reduce to loop statement");}
+			WHILE 
+			{
+				fprintf(outputFile, "Lbegin:\n");
+			}
+			'(' boolean_expression ')'
+			{
+				fprintf(outputFile, "Lexit\n");
+			}
+			sab_statment
+			{
+				fprintf(outputFile, "goto Lbegin:\n");
+				fprintf(outputFile, "Lexit:\n");
+			}
+		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
+			{
+				char *name;
+				// naming the symtab with line number
+				sprintf(name, "for-%d", linenum);
+				localSymtab = symtabCreate(name, symtabIndexHead);
+				localRef=0;
+				symtabInsert(localSymtab, $3, "int", true, localRef, NULL);
+				symtab *symbol = scopeLookup(globalSymtab, localSymtab, $3);
+				fprintf(outputFile, "Fbegin:\n");
+				// increment or decrement the input ID
+				if($6 > $8){
+					// increment
+					fprintf(outputFile, "iinc %d\n", symbol->value);
+				}else if($8 < $6){
+					// decrement
+					fprintf(outputFile, "idec %d\n", symbol->value);
+				}else{
+					// opearate only once
+				}
+				// conditional satement
+				fprintf(outputFile, "iload %d\n", symbol->value);
+				fprintf(outputFile, "sipush %d\n", $8);
+				fprintf(outputFile, "isub\n");
+				fprintf(outputFile, "ifeq Fquit\n");
+			}
+			sab_statment
+			{
+				fprintf(outputFile, "goto Fbegin\n");
+				fprintf(outputFile, "hello");
+				Trace("reduce to loop statement");
+			}
 		;
 
 procedure_invocation:	IDENTIFIER 
 						{
+							listnodeHead = listnodeCreate();
 						}
 						'(' parameter_expression ')'	
 						{
 							// recognize if the identifier's type is of method
 							// some of the function should lookup in the program scope
 							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
-							if(symbol == NULL){yyerror("!!!couldn't resolve the symbol!!!\n");}
+							if(symbol == NULL){
+								yyerror("!!!couldn't resolve the symbol!!!\n");
+							}
+							printf("symbol name: %s\n", symbol->name);
 							listnode *idParam = symbol->parameterList;
 							listnode *inputParam = $4;
-							if(listcmp(idParam, inputParam) != 0){printf("!!!Type mismatch!!!\n");}
+							if(listcmp(idParam, inputParam) != 0){yyerror("!!!Type mismatch!!!\n");}
+							// code generation
 							fprintf(outputFile, "getstatic int %s.%s(", globalSymtab->name, $1);
 							fprintf(outputFile, "%s", getParamList(symbol->parameterList));
 							fprintf(outputFile, ")\n");
@@ -334,14 +402,18 @@ parameter_expression:
 value: 
 		NUMBER 					{
 									fprintf(outputFile, "sipush %d", $1);
+									$$ = "int";
 								}
-	| 	REAL
+	| 	REAL					{$$ = "float";}
 	|	STRING_VAL				{
-									fprintf(outputFile, "ldc %s", STRING_VAL);
+									fprintf(outputFile, "ldc %s", $1);
+									$$ = "string";
 								}
 	|	IDENTIFIER 				{
 									char *result = loadSymbol(globalSymtab, localSymtab, $1);
 									fprintf(outputFile, "%s", result);
+									symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+									$$ = symbol->type;
 								}
 	|	procedure_invocation	{$$=$1;}
 	;
@@ -350,7 +422,6 @@ bool:
 		TRUE 
 	|	FALSE 
 	|	IDENTIFIER 
-	|	procedure_invocation
 	;
 
 boolorval: 
@@ -360,8 +431,8 @@ boolorval:
 	|	TRUE		{$$="bool";}
 	|	FALSE		{$$="bool";}
 	|	IDENTIFIER	{
-						symtab = scopeLookup(globalSymtab, localSymtab, $1);
-						$$=symtab->type;
+						symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+						$$=symbol->type;
 					}
 	;
 
@@ -399,12 +470,30 @@ num_expression:
 		;
 
 boolean_expression:	
-			num_expression '<' num_expression
-		|	num_expression LESSEQUAL num_expression
-		|	num_expression LARGEEQUAL num_expression
-		|	num_expression '>' num_expression
-		|	boolorval EQUAL boolorval
-		|	boolorval NOTEQUAL boolorval
+			num_expression '<' num_expression			{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "ifge");
+														}
+		|	num_expression LESSEQUAL num_expression		{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "ifgt ");
+														}
+		|	num_expression LARGEEQUAL num_expression	{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "iflt ");
+														}
+		|	num_expression '>' num_expression			{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "ifle ");
+														}
+		|	num_expression EQUAL num_expression			{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "ifne ");
+														}
+		|	num_expression NOTEQUAL num_expression		{
+															fprintf(outputFile, "isub\n");
+															fprintf(outputFile, "ifeq ");
+														}
 		|	boolean_expression AND boolean_expression
 		|	boolean_expression OR boolean_expression
 		|	'!' boolean_expression
@@ -462,7 +551,7 @@ void symtabIndexInsert(symtabIndex *head, symtab *table, char *name){
 		new->next = NULL;
 		current->next = new;
 	}else{
-		printf("!!!This symbol table name is redifined!!!\n");
+		yyerror("!!!This symbol table name is redifined!!!\n");
 	}
 }
 
@@ -526,7 +615,7 @@ void symtabInsert(symtab *head, char *name, char *type, bool changeable, int val
 		new->next = NULL;
 		current->next = new;
 	}else{
-		printf("!!!This symbol name is redifined!!!\n");
+		yyerror("!!!This symbol name is redifined!!!\n");
 	}
 }
 
@@ -573,7 +662,7 @@ void listnodeInsert(listnode *head, char *val){
 	listnode *new = (listnode*)malloc(sizeof(listnode));
 	char *nval = (char*)malloc(sizeof(char)*strlen(val));
 	strcpy(nval, val);
-	new->val = val;
+	new->val = nval;
 	new->next = NULL;
 	current->next = new;
 }
@@ -605,8 +694,7 @@ char* getParamList(listnode *head){
 	char *output = "";
 	while(current->next != NULL){
 		current = current->next;
-		strcat(output, current->val);
-		strcat(output, ",");
+		sprintf(output, "%s,", current->val);
 	}
 	return output;
 }
@@ -616,18 +704,14 @@ char* getParamList(listnode *head){
 symtab* scopeLookup(symtab *global, symtab *local, char *name){
 	// search 
 	// local lookup
-	symtab *symbol=symtabLookup(local, name);
-	if(symbol == NULL){
-		// global lookup
-		symbol = symtabLookup(global, name);
-		if(symbol == NULL){
-			printf("!!!Input id doesn't exist in local or global scope!!!");
-			return NULL;
-		}else{
-			return symbol;
-		}
-	}else{
+	symtab *symbol;
+	if((symbol = symtabLookup(local, name)) != NULL){
 		return symbol;
+	}else if((symbol = symtabLookup(global, name)) != NULL){
+		return symbol;
+	}else{
+		yyerror("!!!Input id doesn't exist in local or global scope!!!");
+		return NULL;
 	}
 }
 
@@ -635,17 +719,19 @@ symtab* scopeLookup(symtab *global, symtab *local, char *name){
 // length are not the same: l1=null, l2!=null or vice versa
 int listcmp(listnode *l1, listnode *l2){
 	int result = 0;
+	listnode *current1 = l1;
+	listnode *current2 = l2;
 	while(l1->next != NULL){
 		// of the same length
-		l1 = l1->next;
-		l2 = l2->next;
+		current1 = current1->next;
+		current2 = current2->next;
 		if(l1->next != NULL && l2->next != NULL){
 			if(strcmp(l1->val, l2->val) != 0)result++;
 		}else if(l1->next != NULL && l2->next == NULL){
-			printf("!!!Length of Parameter aren't the same!!!\n");
+			yyerror("!!!Length of Parameter aren't the same!!!\n");
 			return ++result;
 		}else if(l1->next == NULL && l2->next != NULL){
-			printf("!!!Length of Parameter aren't the same!!!\n");
+			yyerror("!!!Length of Parameter aren't the same!!!\n");
 			return ++result;
 		}else{
 			if(strcmp(l1->val, l2->val) != 0)result++;
@@ -662,22 +748,22 @@ char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
 		if(symbol->changeable == true){
 			// variable
 			sprintf(result, "store %d\n", ref);
-		}else if(symbol->changeable == bool){
+		}else if(symbol->changeable == false){
 			// constant
-			printf("!!!Trying to modify constant!!!\n");
+			yyerror("!!!Trying to modify constant!!!\n");
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
 		if(symbol->changeable == true){
 			// variable
-			sprintf(result, "getstatic %s.%s", global->name, symbol->name);
+			sprintf(result, "putstatic int %s.%s", global->name, symbol->name);
 		}else if(symbol->changeable == false){
 			// constant
-			printf("!!!Trying to modify constant!!!\n");
+			yyerror("!!!Trying to modify constant!!!\n");
 		}
 	}else{
-		printf("!!!Symbol Not Found!!!\n");
-		result = "";
+		yyerror("!!!Symbol Not Found!!!\n");
+		result = NULL;
 	}
 	return result;
 }
@@ -701,7 +787,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 		int val = symbol->value;
 		sprintf(result, "sipush %d\n", val);
 	}else{
-		printf("!!!Symbol Not Found!!!\n");
+		yyerror("!!!Symbol Not Found!!!\n");
 		result = "";
 	}
 	return result;

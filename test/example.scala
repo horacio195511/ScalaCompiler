@@ -16,10 +16,11 @@ object example {
   {
     var c:int
     c = 1+2/3
-    if (c > 10)
+    if (c > 10){
       print (-c)
-    else
+    }else{
       print (c)
+    }
     println ("Hello World")
   }
 }
