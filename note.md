@@ -1,6 +1,7 @@
 # B10504028 Compiler Design Project 2
 ## Change to scanner.l
 scanner remain unchange, and still capable of recognize all of the token unused for debug.
+the scanner are able to recognize keyword regardless of upper or lower case.
 ## Change to parser.y
 Add parameter type checking
 Add expression type checking

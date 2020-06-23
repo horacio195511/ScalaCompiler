@@ -31,33 +31,33 @@ letter		[a-zA-Z0-9]
 %x	COMMENT
 
 %%
-int			{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
-float		{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
-boolean		{tokenKeyword("BOOLEAN"); yylval.string = "boolean"; return(BOOLEAN);}
-string		{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
-char		{tokenKeyword("CHAR"); yylval.string = "char"; return(CHAR);}
-break		{tokenKeyword("BREAK"); return(BREAK);}
-class		{tokenKeyword("CLASS"); return(CLASS);}
-continue	{tokenKeyword("CONTINUE"); return(CONTINUE);}
-def			{tokenKeyword("DEF"); return(DEF);}
-do			{tokenKeyword("DO"); return(DO);}
-else		{tokenKeyword("ELSE"); return(ELSE);}
-exit		{tokenKeyword("EXIT"); return(EXIT);}
-for			{tokenKeyword("FOR"); return(FOR);}
-if			{tokenKeyword("IF"); return(IF);}
-null		{tokenKeyword("NULL"); return(TNULL);}
-while		{tokenKeyword("WHILE"); return(WHILE);}
-object		{tokenKeyword("OBJECT"); return(OBJECT);}
-print		{tokenKeyword("PRINT"); return(PRINT);}
-println		{tokenKeyword("PRINTLN"); return(PRINTLN);}
-repeat		{tokenKeyword("REPEAT"); return(REPEAT);}
-return		{tokenKeyword("RETURN"); return(RETURN);}
-to			{tokenKeyword("TO"); return(TO);}
-read		{tokenKeyword("READ"); return(READ);}
-true		{tokenKeyword("TRUE"); yylval.bval = true; return(TRUE);}
-false		{tokenKeyword("FALSE"); yylval.bval = true; return(FALSE);}
-val			{tokenKeyword("VAL"); return(VAL);}
-var			{tokenKeyword("VAR"); return(VAR);}
+[Ii][Nn][Tt]						{tokenKeyword("INT"); yylval.string = "int"; return(INT);}
+[Ff][Ll][Oo][Aa][Tt]				{tokenKeyword("FLOAT"); yylval.string = "float"; return(FLOAT);}
+[Bb][Oo][Oo][Ll][Ee][Aa][Nn]		{tokenKeyword("BOOLEAN"); yylval.string = "boolean"; return(BOOLEAN);}
+[Ss][Tt][Rr][Ii][Nn][Gg]			{tokenKeyword("STRING"); yylval.string = "string"; return(STRING);}
+[Cc][Hh][Aa][Rr]					{tokenKeyword("CHAR"); yylval.string = "char"; return(CHAR);}
+[Bb][Rr][Ee][Aa][Kk]				{tokenKeyword("BREAK"); return(BREAK);}
+[Cc][Ll][Aa][Ss][Ss]				{tokenKeyword("CLASS"); return(CLASS);}
+[Cc][Oo][Nn][Tt][Ii][Nn][Uu][Ee]	{tokenKeyword("CONTINUE"); return(CONTINUE);}
+[Dd][Ee][Ff]						{tokenKeyword("DEF"); return(DEF);}
+[Dd][Oo]							{tokenKeyword("DO"); return(DO);}
+[Ee][Ll][Ss][Ee]					{tokenKeyword("ELSE"); return(ELSE);}
+[Ee][Xx][Ii][Tt]					{tokenKeyword("EXIT"); return(EXIT);}
+[Ff][Oo][Rr]						{tokenKeyword("FOR"); return(FOR);}
+[Ii][Ff]							{tokenKeyword("IF"); return(IF);}
+[Nn][Uu][Ll][Ll]					{tokenKeyword("NULL"); return(TNULL);}
+[Ww][Hh][Ii][Ll][Ee]				{tokenKeyword("WHILE"); return(WHILE);}
+[Oo][Bb][Jj][Ee][Cc][Tt]			{tokenKeyword("OBJECT"); return(OBJECT);}
+[Pp][Rr][Ii][Nn][Tt]				{tokenKeyword("PRINT"); return(PRINT);}
+[Pp][Rr][Ii][Nn][Tt][Ll][Nn]		{tokenKeyword("PRINTLN"); return(PRINTLN);}
+[Rr][Ee][Pp][Ee][Aa][Tt]			{tokenKeyword("REPEAT"); return(REPEAT);}
+[Rr][Ee][Tt][Uu][Rr][Nn]			{tokenKeyword("RETURN"); return(RETURN);}
+[Tt][Oo]							{tokenKeyword("TO"); return(TO);}
+[Rr][Ee][Aa][Dd]					{tokenKeyword("READ"); return(READ);}
+[Tt][Rr][Uu][Ee]					{tokenKeyword("TRUE"); yylval.bval = true; return(TRUE);}
+[Ff][Aa][Ll][Ss][Ee]				{tokenKeyword("FALSE"); yylval.bval = true; return(FALSE);}
+[Vv][Aa][Ll]						{tokenKeyword("VAL"); return(VAL);}
+[Vv][Aa][Rr]						{tokenKeyword("VAR"); return(VAR);}
 \,			{token(","); return(',');}
 \:			{token(":"); return(':');}
 \.			{token("."); return('.');}
@@ -113,7 +113,6 @@ var			{tokenKeyword("VAR"); return(VAR);}
 [ \t]*	{LIST;}
 
 ^\/\*	{
-			LIST;
 			BEGIN COMMENT;
 		}
 
