@@ -143,7 +143,7 @@ var			{tokenKeyword("VAR"); return(VAR);}
 				buf[0] = '\0';
 			}
 
-\"[^\"\n\t]+\"	{
+\"[^\"\n\t]*\"	{
 					char c = input();
 					unput(c);	/* just peeking */
 					if(c != '\"'){

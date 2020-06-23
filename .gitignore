@@ -3,9 +3,9 @@ y.tab.c
 y.tab.h
 scala
 *.swp
-input.scala
 *.swo
+*.javac
+input.scala
 .vscode/launch.json
-target.javac
 other/*
 test/*

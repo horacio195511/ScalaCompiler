@@ -8,4 +8,4 @@ y.tab.c: parser.y
 	yacc -d parser.y 
 
 clean:
-	rm lex.yy.c y.tab.* scala
+	rm lex.yy.c y.tab.* scala *.javac

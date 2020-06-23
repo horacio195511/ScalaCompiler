@@ -17,6 +17,8 @@ typedef struct symtab{
 	char *name;
 	char *type;
 	bool changeable;
+	// constant: value
+	// variable: reference
 	int value;
 	struct listnode *parameterList;
 	struct symtab *next;
@@ -153,15 +155,16 @@ no_type_constant_declaration:
 		;
 
 variable_declaration:	
-			VAR IDENTIFIER ':' INT '=' NUMBER			{
+			VAR IDENTIFIER ':' INT '=' num_expression		{
 															symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 															// the genereated program differed from what scope it's in
 															if(localSymtab == globalSymtab){
 																// global scope
-																fprintf(outputFile, "%s %s %s", "field static int", $2, "\n");
+																fprintf(outputFile, "field static int %s\n", $2);
+																fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
 															}else{
 																// local scope
-																fprintf(outputFile, "sipush %d\nistore %d\n", $6, localRef++);
+																fprintf(outputFile, "istore %d\n", localRef++);
 															}
 														}
 		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
@@ -173,20 +176,50 @@ variable_declaration:
 
 no_value_variable_declaration:	
 			VAR IDENTIFIER ':' INT		{
-											symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 											// the genereated program differed from what scope it's in
 											if(localSymtab == globalSymtab){
 												// global scope
-												fprintf(outputFile, "%s %s %s", "field static int", $2, "\n");
+												symtabInsert(localSymtab, $2, $4, true, 0, NULL);
+												fprintf(outputFile, "field static int %s\n", $2);
 											}else{
 												// local scope
-												fprintf(outputFile, "sipush %d\nistore %d\n", 0, localRef++);
+												symtabInsert(localSymtab, $2, $4, true, localRef, NULL);
+												localRef++;
+												symtab *symbol = symtabLookup(localSymtab, $2);
+												fprintf(outputFile, "sipush %d\nistore %d\n", 0, symbol->value);
 											}
 										}
 		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
 		|	VAR IDENTIFIER ':' BOOLEAN	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
 		|	VAR IDENTIFIER ':' STRING	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
 		|	VAR IDENTIFIER ':' CHAR		{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
+		|	no_type_variable_declaration
+		;
+
+no_type_variable_declaration:
+			VAR IDENTIFIER '=' num_expression		{
+														if(strcmp($4, "int") == 0){
+															if(localSymtab == globalSymtab){
+																// global scope
+																symtabInsert(localSymtab, $2, $4, true, 0, NULL);
+																fprintf(outputFile, "field static int %s\n", $2);
+																fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
+															}else{
+																// local scope
+																symtabInsert(localSymtab, $2, "int", true, localRef, NULL);
+																localRef++;
+																symtab *symbol = symtabLookup(localSymtab, $2);
+																fprintf(outputFile, "istore %d\n", symbol->value);
+															}
+														}else{
+															yyerror("!!!Type of value not supported!!!");
+														}
+													}
+		|	no_type_value_variable_declaration
+		;
+
+no_type_value_variable_declaration:
+			VAR IDENTIFIER
 		;
 
 array_declaration:	
@@ -481,25 +514,25 @@ num_expression:
 			num_expression '+' num_expression	{
 													fprintf(outputFile, "iadd\n");
 													// type checking
-													if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
 													else $$=$1;
 												}
 		|	num_expression '-' num_expression	{
 													fprintf(outputFile, "isub\n");
 													// type checking
-													if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
 													else $$=$1;
 												}
 		|	num_expression '*' num_expression	{
 													fprintf(outputFile, "imul\n");
 													// type checking
-													if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
 													else $$=$1;
 												}
 		|	num_expression '/' num_expression	{
 													fprintf(outputFile, "idiv\n");
 													// type checking
-													if(strcmp($1, $3) != 0)printf("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
 													else $$=$1;
 												}
 		|	'-' num_expression %prec UMINUS		{
@@ -550,15 +583,32 @@ void yyerror(char *msg)
 void main(int argc, char *argv[])
 {
     extern FILE *yyin;
+	char *inputFileName;
+	char *outputFileName;
     /* open the source program file */
     if (argc != 2) {
-	printf ("Usage: sc filename\n");
-	exit(1);
-    }
+		printf ("Usage: scala filename\n");
+		exit(1);
+    }else{
+		// store arg2
+		inputFileName = (char*)malloc(sizeof(char)*strlen(argv[1]));
+		strcpy(inputFileName, argv[1]);
+	}
 	// symtab index initialized here
-    yyin = fopen(argv[1], "r");         /* open input file */
-    symtabIndexHead = symtabIndexCreate();
-    outputFile = fopen("target.javac", "w");
+    if((yyin = fopen(inputFileName, "r")) == NULL){
+		printf("Error: File Not Found\n");
+		exit(1);
+	}else{
+		// replace the *.scala to *.javac
+		char *newSub = ".javac";
+		char *mid = strchr(inputFileName, '.');
+		strcpy(mid, newSub);
+		outputFileName = (char*)malloc(sizeof(char)*strlen(inputFileName));
+		strcpy(outputFileName, inputFileName);
+		outputFile = fopen(outputFileName, "w");
+    	symtabIndexHead = symtabIndexCreate();
+	}
+    
     /* perform parsing */
     if (yyparse() == 1){
 		yyerror("Parsing error !");     /* syntax error */
@@ -810,18 +860,22 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 	symtab *symbol;
 	if((symbol = symtabLookup(local, name)) != NULL){
 		// local
-		// variable
-		sprintf(result, "getstatic %s.%s", global->name, symbol->name);
-		// constant: looking in symtab
-		int val = symbol->value;
-		sprintf(result, "sipush %d\n", val);
+		if(symbol->changeable == 1){
+			// variable
+			sprintf(result, "iload %d\n", symbol->value);
+		}else{
+			// constant: looking in symtab
+			sprintf(result, "sipush %d\n", symbol->value);
+		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
-		// variable
-		sprintf(result, "getstatic %s.%s", global->name, symbol->name);
-		// constant: looking in symtab, directly return the value
-		int val = symbol->value;
-		sprintf(result, "sipush %d\n", val);
+		if(symbol->changeable == 1){
+			// variable
+			sprintf(result, "getstatic %s.%s\n", global->name, symbol->name);
+		}else{
+			// constant: looking in symtab, directly return the value
+			sprintf(result, "sipush %d\n", symbol->value);
+		}
 	}else{
 		yyerror("!!!Symbol Not Found!!!");
 		str = NULL;
