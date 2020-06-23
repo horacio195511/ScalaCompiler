@@ -147,15 +147,18 @@ letter		[a-zA-Z0-9]
 					unput(c);	/* just peeking */
 					if(c != '\"'){
 						// normal string
+						LIST;
 						char *out = removeDoubleQuote(yytext,yyleng);
 						out = removeQuote(out);
 						buf[yyleng] = '\0';
 						yylval.string = out;
 						return(STRING_VAL);
 					}else{
+						LIST;
 						yymore();
 					}
 				}
+
 .	{
 		LIST;
 		printf("%d:%s\n", linenum+1, buf);

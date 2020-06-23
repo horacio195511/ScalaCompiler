@@ -156,15 +156,20 @@ no_type_constant_declaration:
 
 variable_declaration:	
 			VAR IDENTIFIER ':' INT '=' NUMBER		{
-															symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 															// the genereated program differed from what scope it's in
 															if(localSymtab == globalSymtab){
 																// global scope
+																symtabInsert(localSymtab, $2, $4, true, 0, NULL);
+																// fprintf(outputFile, "sipush %d\n", $6);
 																fprintf(outputFile, "field static int %s\n", $2);
-																fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
+																// fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
 															}else{
 																// local scope
-																fprintf(outputFile, "istore %d\n", localRef++);
+																symtabInsert(localSymtab, $2, $4, true, localRef, NULL);
+																localRef++;
+																symtab *symbol = symtabLookup(localSymtab, $2);
+																fprintf(outputFile, "sipush %d\n", $6);
+																fprintf(outputFile, "istore %d\n", symbol->value);
 															}
 														}
 		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
@@ -202,12 +207,14 @@ no_type_variable_declaration:
 													// global scope
 													symtabInsert(localSymtab, $2, "int", true, 0, NULL);
 													fprintf(outputFile, "field static int %s\n", $2);
-													fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
+													// fprintf(outputFile, "sipush %d\n", $4);
+													// fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
 												}else{
 													// local scope
 													symtabInsert(localSymtab, $2, "int", true, localRef, NULL);
 													localRef++;
 													symtab *symbol = symtabLookup(localSymtab, $2);
+													fprintf(outputFile, "sipush %d\n", $4);
 													fprintf(outputFile, "istore %d\n", symbol->value);
 												}
 											}
@@ -259,7 +266,13 @@ method_declaration:
 			}
 			 method_block 
 			{
-				fprintf(outputFile, "}\n");
+				symtab *symbol = symtabLookup(globalSymtab, $2);
+				if(strcmp(symbol->type, "void") == 0){
+					fprintf(outputFile, "return\n");
+					fprintf(outputFile, "}\n");
+				}else{
+					fprintf(outputFile, "}\n");
+				}
 			}
 		;
 
@@ -304,7 +317,8 @@ simple_statement:
 			IDENTIFIER '=' num_expression	{
 												symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 												// value assignment
-												storeSymbol(globalSymtab, localSymtab, symbol->name, localRef);
+												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name, symbol->value);
+												fprintf(outputFile, "%s", out);
 											}
 		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
 		|	PRINT 
@@ -391,7 +405,7 @@ loop_statement:
 			}
 			sab_statment
 			{
-				fprintf(outputFile, "goto Lbegin:\n");
+				fprintf(outputFile, "goto Lbegin\n");
 				fprintf(outputFile, "Lexit:\n");
 			}
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
@@ -454,7 +468,8 @@ procedure_invocation:	IDENTIFIER
 							}
 							fprintf(outputFile, ")\n");
 							$$ = symbol->type;
-						};
+						}
+						;
 
 parameter_expression:
 						parameter_expression ',' value 		{
@@ -530,7 +545,7 @@ num_expression:
 boolean_expression:	
 			num_expression '<' num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifge");
+															fprintf(outputFile, "ifge ");
 														}
 		|	num_expression LESSEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
@@ -824,7 +839,7 @@ char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
 		// global
 		if(symbol->changeable == true){
 			// variable
-			sprintf(result, "putstatic int %s.%s", global->name, symbol->name);
+			sprintf(result, "putstatic int %s.%s \n", global->name, symbol->name);
 		}else if(symbol->changeable == false){
 			// constant
 			yyerror("!!!Trying to modify constant!!!");
