@@ -154,6 +154,7 @@ no_type_constant_declaration:
 
 variable_declaration:	
 			VAR IDENTIFIER ':' INT '=' NUMBER			{
+															symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 															// the genereated program differed from what scope it's in
 															if(localSymtab == globalSymtab){
 																// global scope
@@ -162,7 +163,6 @@ variable_declaration:
 																// local scope
 																fprintf(outputFile, "sipush %d\nistore %d\n", $6, localRef++);
 															}
-															symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 														}
 		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
 		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
@@ -173,6 +173,7 @@ variable_declaration:
 
 no_value_variable_declaration:	
 			VAR IDENTIFIER ':' INT		{
+											symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 											// the genereated program differed from what scope it's in
 											if(localSymtab == globalSymtab){
 												// global scope
@@ -181,7 +182,6 @@ no_value_variable_declaration:
 												// local scope
 												fprintf(outputFile, "sipush %d\nistore %d\n", 0, localRef++);
 											}
-											symtabInsert(localSymtab, $2, $4, true, 0, NULL);
 										}
 		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
 		|	VAR IDENTIFIER ':' BOOLEAN	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
@@ -196,42 +196,64 @@ array_declaration:
 method_declaration:
 			DEF IDENTIFIER 
 			{
-				fprintf(outputFile, "mehtod public static void %s ", $2);
-				fprintf(outputFile, "(java.lang.String[])\nmax_stack 15\nmax_locals 15\n{\n");
+				// create local symtab and enter it
 				localSymtab = symtabCreate($2, symtabIndexHead);
 				listnodeHead = listnodeCreate();
 				// set the reference number to the number of parameter
 				localRef = 0;
 			}
-	 		'(' formal_argument ')' type_exp method_block 
+	 		'(' formal_argument ')' type_exp 
 			{
-				fprintf(outputFile, "}\n");
+				// enter global, and insert to global
 				localSymtab = globalSymtab;
 				symtabInsert(localSymtab, $2, $7, false, 0, $5);
+				//code generation
+				fprintf(outputFile, "mehtod public static %s %s (", $7, $2);
+				if(strcmp($2, "main") == 0){
+					// main method use String as input type
+					fprintf(outputFile, "java.lang.String[]");
+				}else{
+					// other function print out the type list
+					symtab *symbol;
+					symbol = scopeLookup(globalSymtab, localSymtab, $2);
+					listnode *typelist = symbol->parameterList;
+					while(typelist->next != NULL){
+						typelist = typelist->next;
+						fprintf(outputFile, "%s ", typelist->val);
+						if(typelist->next != NULL)fprintf(outputFile, ",");
+					}
+				}
+				// set to local symtab
+				symtabIndex *index = symtabIndexLookup(symtabIndexHead, $2);
+				localSymtab = index->table;
+				fprintf(outputFile, ")\nmax_stack 15\nmax_locals 15\n{\n");
+			}
+			 method_block 
+			{
+				fprintf(outputFile, "}\n");
 			}
 		;
 
 formal_argument:
 			formal_argument ',' IDENTIFIER ':' type		{
-															fprintf(outputFile, "%s, ",$5);
-															symtabInsert(localSymtab, $3, $5, true, 0, NULL);
-															// type checking
+															symtabInsert(localSymtab, $3, $5, true, localRef, NULL);
 															listnodeInsert(listnodeHead, $5);
 															localRef++;
 														}
 		|	IDENTIFIER ':' type							{
-															fprintf(outputFile, "%s ", $3);
-															symtabInsert(localSymtab, $1, $3, true, 0, NULL);
-															// type checking
+															symtabInsert(localSymtab, $1, $3, true, localRef, NULL);
 															listnodeInsert(listnodeHead, $3);
 															localRef++;
 															$$=listnodeHead;
 														}
-		|	{$$=NULL;}
+		|	{
+				printf("type NUll\n");
+				$$=NULL;
+			}
 		;
 
 type_exp:
-			{$$="NULL";}
+			{$$="void";}
 		|	':' type {$$=$2;}
 		;
 
@@ -271,14 +293,18 @@ simple_statement:
 				}
 				
 			}
-		|	PRINTLN '(' num_expression ')'
+		|	PRINTLN 
 			{
-				if(strcmp($3, "int") == 0){
+				fprintf(outputFile, "getstatic java.io.PrintStream java.lang.System.out\n");
+			}
+			'(' num_expression ')'
+			{
+				if(strcmp($4, "int") == 0){
 					// type = string
-					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(int)\n");
+					fprintf(outputFile, "invokevirtual void java.io.PrintStream.println(int)\n");
 				}else{
 					// type = int
-					fprintf(outputFile, "invokevirtual void java.io.PrintStream.print(java.lang.String)\n");
+					fprintf(outputFile, "invokevirtual void java.io.PrintStream.println(java.lang.String)\n");
 				}
 				
 			}
@@ -294,22 +320,32 @@ zms:	zms statement | zms simple_statement | ;
 oms:	oms statement | oms simple_statement | statement | simple_statement ;
 
 conditional_statement:
-			IF '(' boolean_expression ')'
-			{fprintf(outputFile, "Lfalse\n");}
-			sab_statment
-			{fprintf(outputFile, "Lfalse:\n");}
-		|	IF '(' boolean_expression ')'
-			{fprintf(outputFile, "Lfalse\n");}
-			sab_statment 
-			{fprintf(outputFile, "goto Lexit\n");}
+			IF '(' boolean_expression ')' ACT sab_statment 
+			{
+				fprintf(outputFile, "goto Lexit\n");
+			}
 			ELSE
-			{fprintf(outputFile, "Lfalse:\n");}
+			{
+				fprintf(outputFile, "Lfalse:\n");
+			}
 			sab_statment
 			{
 				fprintf(outputFile, "Lexit:");
 				Trace("Reduce to conditional statement\n");
 			}
+		|
+			IF '(' boolean_expression ')' ACT sab_statment
+			{
+				fprintf(outputFile, "Lfalse:\n");
+				Trace("Reduce to conditional statement\n");
+			}
 		;
+
+ACT:
+	{
+		fprintf(outputFile, "Lfalse\n");
+	}
+	;
 
 block_statement:	'{' zmvcd oms '}';
 
@@ -331,7 +367,7 @@ loop_statement:
 			}
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
 			{
-				char *name;
+				char name[10];
 				// naming the symtab with line number
 				sprintf(name, "for-%d", linenum);
 				localSymtab = symtabCreate(name, symtabIndexHead);
@@ -373,15 +409,20 @@ procedure_invocation:	IDENTIFIER
 							// some of the function should lookup in the program scope
 							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 							if(symbol == NULL){
-								yyerror("!!!couldn't resolve the symbol!!!\n");
+								yyerror("!!!Couldn't resolve the symbol!!!\n");
 							}
-							printf("symbol name: %s\n", symbol->name);
 							listnode *idParam = symbol->parameterList;
 							listnode *inputParam = $4;
-							if(listcmp(idParam, inputParam) != 0){yyerror("!!!Type mismatch!!!\n");}
+							if(listcmp(idParam, inputParam) != 0){
+								yyerror("!!!Type mismatch!!!\n");
+							}
 							// code generation
 							fprintf(outputFile, "getstatic int %s.%s(", globalSymtab->name, $1);
-							fprintf(outputFile, "%s", getParamList(symbol->parameterList));
+							while(inputParam->next != NULL){
+								inputParam = inputParam->next;
+								fprintf(outputFile, "%s ", inputParam->val);
+								if(inputParam->next != NULL)fprintf(outputFile, ",");
+							}
 							fprintf(outputFile, ")\n");
 							$$ = symbol->type;
 						};
@@ -390,23 +431,23 @@ parameter_expression:
 						parameter_expression ',' boolorval 		{
 																// type checking
 																listnodeInsert(listnodeHead, $3);
-															}
+																}
 					|	boolorval 								{
 																// type checking
 																listnodeInsert(listnodeHead, $1);
 																$$ = listnodeHead;
-															}
+																}
 					| 	{$$=NULL;}
 					;
 
 value: 
 		NUMBER 					{
-									fprintf(outputFile, "sipush %d", $1);
+									fprintf(outputFile, "sipush %d\n", $1);
 									$$ = "int";
 								}
 	| 	REAL					{$$ = "float";}
 	|	STRING_VAL				{
-									fprintf(outputFile, "ldc %s", $1);
+									fprintf(outputFile, "ldc %s\n", $1);
 									$$ = "string";
 								}
 	|	IDENTIFIER 				{
@@ -496,7 +537,7 @@ boolean_expression:
 														}
 		|	boolean_expression AND boolean_expression
 		|	boolean_expression OR boolean_expression
-		|	'!' boolean_expression
+		|	'!' boolean_expression %prec '!'
 		|	bool
 		;
 %%
@@ -684,21 +725,10 @@ void listnodeDump(listnode *head){
 	listnode *current = head;
 	printf("list node\n");
 	while(current->next !=  NULL){
+		current = current->next;
 		printf("%s\n", current->val);
-		current = current->next;
 	}
 }
-
-char* getParamList(listnode *head){
-	listnode *current = head;
-	char *output = "";
-	while(current->next != NULL){
-		current = current->next;
-		sprintf(output, "%s,", current->val);
-	}
-	return output;
-}
-
 //scope rule: global and local, return symbol pointer if the symbol is valid
 // return NULL if the symbol is invalid, accompany with an error message
 symtab* scopeLookup(symtab *global, symtab *local, char *name){
@@ -710,7 +740,9 @@ symtab* scopeLookup(symtab *global, symtab *local, char *name){
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		return symbol;
 	}else{
-		yyerror("!!!Input id doesn't exist in local or global scope!!!");
+		char err[500];
+		sprintf(err, "!!!Input id \"%s\" doesn't exist in local or global scope!!!", name);
+		yyerror(err);
 		return NULL;
 	}
 }
@@ -721,36 +753,37 @@ int listcmp(listnode *l1, listnode *l2){
 	int result = 0;
 	listnode *current1 = l1;
 	listnode *current2 = l2;
-	while(l1->next != NULL){
+	while(current1->next != NULL){
 		// of the same length
 		current1 = current1->next;
 		current2 = current2->next;
-		if(l1->next != NULL && l2->next != NULL){
-			if(strcmp(l1->val, l2->val) != 0)result++;
-		}else if(l1->next != NULL && l2->next == NULL){
-			yyerror("!!!Length of Parameter aren't the same!!!\n");
+		if(current1->next != NULL && current2->next != NULL){
+			if(strcmp(current1->val, current2->val) != 0)result++;
+		}else if(current1->next != NULL && current2->next == NULL){
+			yyerror("!!!Length of Parameter aren't the same!!!");
 			return ++result;
-		}else if(l1->next == NULL && l2->next != NULL){
-			yyerror("!!!Length of Parameter aren't the same!!!\n");
+		}else if(current1->next == NULL && current2->next != NULL){
+			yyerror("!!!Length of Parameter aren't the same!!!");
 			return ++result;
 		}else{
-			if(strcmp(l1->val, l2->val) != 0)result++;
+			if(strcmp(current1->val, current2->val) != 0)result++;
 		}
 	}
 	return result;
 }
 
 char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
-	char *result;
+	char result[100];
+	char *str = &result[0];
 	symtab *symbol;
 	if((symbol = symtabLookup(local, name)) != NULL){
 		// local
 		if(symbol->changeable == true){
 			// variable
-			sprintf(result, "store %d\n", ref);
+			sprintf(result, "istore %d\n", ref);
 		}else if(symbol->changeable == false){
 			// constant
-			yyerror("!!!Trying to modify constant!!!\n");
+			yyerror("!!!Trying to modify constant!!!");
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
@@ -759,18 +792,21 @@ char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
 			sprintf(result, "putstatic int %s.%s", global->name, symbol->name);
 		}else if(symbol->changeable == false){
 			// constant
-			yyerror("!!!Trying to modify constant!!!\n");
+			yyerror("!!!Trying to modify constant!!!");
 		}
 	}else{
-		yyerror("!!!Symbol Not Found!!!\n");
-		result = NULL;
+		char err[500];
+		sprintf(err, "!!!Symbol \"%s\" Not Found!!!", name);
+		yyerror(err);
+		str = NULL;
 	}
-	return result;
+	return str;
 }
 
 char* loadSymbol(symtab *global, symtab *local, char *name){
 	// a symbol could be local or global, and variable or constant
-	char *result;
+	char result[500];
+	char *str = &result[0];
 	symtab *symbol;
 	if((symbol = symtabLookup(local, name)) != NULL){
 		// local
@@ -787,8 +823,8 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 		int val = symbol->value;
 		sprintf(result, "sipush %d\n", val);
 	}else{
-		yyerror("!!!Symbol Not Found!!!\n");
-		result = "";
+		yyerror("!!!Symbol Not Found!!!");
+		str = NULL;
 	}
-	return result;
+	return str;
 }

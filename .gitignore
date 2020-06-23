@@ -8,4 +8,4 @@ input.scala
 .vscode/launch.json
 target.javac
 other/*
-testFile/*
+test/*
