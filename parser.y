@@ -45,6 +45,7 @@ void symtabDump(symtab*);
 // function for linked list
 listnode* listnodeCreate();
 void listnodeInsert(listnode*, char*);
+listnode* listnodePop(listnode*);
 listnode* listnodeLookup(listnode*, char*);
 void listnodeDump(listnode*);
 char* getParamList(listnode*);
@@ -76,6 +77,8 @@ listnode *listnodeHead;
 char *lastScope;
 FILE *outputFile;
 int localRef;
+int conRef;
+int loopRef;
 %}
 
 /* data type definition */
@@ -609,6 +612,8 @@ void main(int argc, char *argv[])
 		// open file for ouptut
 		outputFile = fopen(outputFileName, "w");
     	symtabIndexHead = symtabIndexCreate();
+		// parameter initialization
+		conRef = 0;
 	}
     
     /* perform parsing */
@@ -759,6 +764,18 @@ void listnodeInsert(listnode *head, char *val){
 	new->val = nval;
 	new->next = NULL;
 	current->next = new;
+}
+// get the last listnode and delete it from list
+listnode* listnodePop(listnode* head){
+	listnode* current = head;
+	listnode* last;
+	while(current->next != NULL){
+		// last to last two, current to last one
+		last = current;
+		current = current->next;
+	}
+	last->next = NULL;
+	return current;
 }
 
 listnode* listnodeLookup(listnode *head, char *val){
