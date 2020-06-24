@@ -10,7 +10,7 @@
 #define tokenKeyword(t)		{LIST; printf("<%s>\n",t);}
 #define tokenInteger(t, i)	{LIST; printf("<%s:%d>\n",t,i);}
 #define tokenFloat(t,f)		{LIST; printf("<%s:%f>\n",t,f);}
-#define tokenString(t,s)	{LIST; printf("<%s:%s>\n",t,s);}
+#define tokenString(t,s)	{LIST; printf("<%s: \"%s\">\n",t,s);}
 
 #define MAX_LINE_LENG 256
 
@@ -147,14 +147,12 @@ letter		[a-zA-Z0-9]
 					unput(c);	/* just peeking */
 					if(c != '\"'){
 						// normal string
-						LIST;
 						char *out = removeDoubleQuote(yytext,yyleng);
 						out = removeQuote(out);
-						buf[yyleng] = '\0';
 						yylval.string = out;
+						tokenString("string", out);
 						return(STRING_VAL);
 					}else{
-						LIST;
 						yymore();
 					}
 				}

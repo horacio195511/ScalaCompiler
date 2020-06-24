@@ -116,16 +116,17 @@ program: 	OBJECT IDENTIFIER
 				globalSymtab = symtabCreate($2, symtabIndexHead);
 				localSymtab=globalSymtab;
 			} 
-			'{'
 			{
 				fprintf(outputFile, "%s %s %s", "class", $2, "{\n");
 			}
-			declaration 
-			'}'	
+			'{'
+			declaration
 			{
 				fprintf(outputFile, "}\n");
 				Trace("reduce to program\n");
-			};
+			}
+			'}'
+			;
 
 declaration:
 			constant_declaration				{Trace("reduce to constant declaration\n");}
@@ -264,7 +265,7 @@ method_declaration:
 				localSymtab = index->table;
 				fprintf(outputFile, ")\nmax_stack 15\nmax_locals 15\n{\n");
 			}
-			 method_block 
+			'{' method_block 
 			{
 				symtab *symbol = symtabLookup(globalSymtab, $2);
 				if(strcmp(symbol->type, "void") == 0){
@@ -274,6 +275,7 @@ method_declaration:
 					fprintf(outputFile, "}\n");
 				}
 			}
+			'}'
 		;
 
 formal_argument:
@@ -299,7 +301,7 @@ type_exp:
 		|	':' type {$$=$2;}
 		;
 
-method_block:	'{'zmvcd zms'}';
+method_block:	zmvcd zms;
 
 type:	
 		FLOAT
@@ -732,6 +734,7 @@ void symtabDump(symtab *head){
 		printf("<%s : %s = %d>\n", current->name, current->type, current->value);
 		current = current->next;
 	}
+	printf("<%s : %s = %d>\n", current->name, current->type, current->value);
 }
 
 listnode* listnodeCreate(){
