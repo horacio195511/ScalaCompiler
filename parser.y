@@ -20,6 +20,7 @@ typedef struct symtab{
 	// constant: value
 	// variable: reference
 	int value;
+	char *string;
 	struct listnode *parameterList;
 	struct symtab *next;
 }symtab;
@@ -39,7 +40,7 @@ void symtabIndexDump(symtabIndex*);
 
 // function for symtab
 symtab* symtabCreate(char*, symtabIndex*);
-void symtabInsert(symtab*, char*, char*, bool, int, listnode*);
+void symtabInsert(symtab*, char*, char*, bool, int, char*, listnode*);
 symtab* symtabLookup(symtab*, char*);
 void symtabDump(symtab*);
 
@@ -131,7 +132,7 @@ program: 	OBJECT IDENTIFIER
 				localSymtab=globalSymtab;
 			} 
 			{
-				fprintf(outputFile, "%s %s %s", "class", $2, "{\n");
+				fprintf(outputFile, "class %s {\n", $2);
 			}
 			'{'
 			declaration
@@ -154,19 +155,21 @@ declaration:
 		;
 
 constant_declaration:
-			VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, false, $6, NULL);}
-		|	VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL);}
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL);}
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, false, 0, NULL);}
-		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, false, 0, NULL);}
+			VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, false, $6, NULL, NULL);}
+		|	VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{
+															symtabInsert(localSymtab, $2, $4, false, 0, $6, NULL);
+														}
+		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
 		|	no_type_constant_declaration
 		;
 
 no_type_constant_declaration:
-			VAL IDENTIFIER '=' NUMBER		{symtabInsert(localSymtab, $2, "int", false, $4, NULL);}
-		|	VAL IDENTIFIER '=' REAL			{symtabInsert(localSymtab, $2, "float", false, 0, NULL);}
-		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(localSymtab, $2, "bool", false, 0, NULL);}
-		|	VAL IDENTIFIER '=' STRING		{symtabInsert(localSymtab, $2, "string", false, 0, NULL);}
+			VAL IDENTIFIER '=' NUMBER		{symtabInsert(localSymtab, $2, "int", false, $4, NULL, NULL);}
+		|	VAL IDENTIFIER '=' REAL			{symtabInsert(localSymtab, $2, "float", false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(localSymtab, $2, "bool", false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER '=' STRING_VAL		{symtabInsert(localSymtab, $2, "string", false, 0, $4, NULL);}
 		;
 
 variable_declaration:	
@@ -174,23 +177,23 @@ variable_declaration:
 															// the genereated program differed from what scope it's in
 															if(localSymtab == globalSymtab){
 																// global scope
-																symtabInsert(localSymtab, $2, $4, true, 0, NULL);
+																symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
 																// fprintf(outputFile, "sipush %d\n", $6);
 																fprintf(outputFile, "field static int %s\n", $2);
 																// fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
 															}else{
 																// local scope
-																symtabInsert(localSymtab, $2, $4, true, localRef, NULL);
+																symtabInsert(localSymtab, $2, $4, true, localRef, NULL, NULL);
 																localRef++;
 																symtab *symbol = symtabLookup(localSymtab, $2);
 																fprintf(outputFile, "sipush %d\n", $6);
 																fprintf(outputFile, "istore %d\n", symbol->value);
 															}
 														}
-		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
+		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	no_value_variable_declaration
 		;
 
@@ -199,21 +202,21 @@ no_value_variable_declaration:
 											// the genereated program differed from what scope it's in
 											if(localSymtab == globalSymtab){
 												// global scope
-												symtabInsert(localSymtab, $2, $4, true, 0, NULL);
+												symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
 												fprintf(outputFile, "field static int %s\n", $2);
 											}else{
 												// local scope
-												symtabInsert(localSymtab, $2, $4, true, localRef, NULL);
+												symtabInsert(localSymtab, $2, $4, true, localRef, NULL, NULL);
 												localRef++;
 												symtab *symbol = symtabLookup(localSymtab, $2);
 												fprintf(outputFile, "sipush %d\n", 0);
 												fprintf(outputFile, "istore %d\n", symbol->value);
 											}
 										}
-		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' BOOLEAN	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' STRING	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
-		|	VAR IDENTIFIER ':' CHAR		{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
+		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' STRING	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' CHAR		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	no_type_variable_declaration
 		;
 
@@ -221,13 +224,13 @@ no_type_variable_declaration:
 			VAR IDENTIFIER '=' NUMBER		{
 												if(localSymtab == globalSymtab){
 													// global scope
-													symtabInsert(localSymtab, $2, "int", true, 0, NULL);
+													symtabInsert(localSymtab, $2, "int", true, 0, NULL, NULL);
 													fprintf(outputFile, "field static int %s\n", $2);
 													// fprintf(outputFile, "sipush %d\n", $4);
 													// fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
 												}else{
 													// local scope
-													symtabInsert(localSymtab, $2, "int", true, localRef, NULL);
+													symtabInsert(localSymtab, $2, "int", true, localRef, NULL, NULL);
 													localRef++;
 													symtab *symbol = symtabLookup(localSymtab, $2);
 													fprintf(outputFile, "sipush %d\n", $4);
@@ -238,11 +241,11 @@ no_type_variable_declaration:
 		;
 
 no_type_value_variable_declaration:
-			VAR IDENTIFIER		{symtabInsert(localSymtab, $2, "void", true, 0, NULL);}
+			VAR IDENTIFIER		{symtabInsert(localSymtab, $2, "void", true, 0, NULL, NULL);}
 		;
 
 array_declaration:	
-			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		; 
 
 method_declaration:
@@ -258,7 +261,7 @@ method_declaration:
 			{
 				// enter global, and insert to global
 				localSymtab = globalSymtab;
-				symtabInsert(localSymtab, $2, $7, false, 0, $5);
+				symtabInsert(localSymtab, $2, $7, false, 0, NULL, $5);
 				//code generation
 				fprintf(outputFile, "method public static %s %s (", $7, $2);
 				if(strcmp($2, "main") == 0){
@@ -295,12 +298,12 @@ method_declaration:
 
 formal_argument:
 			formal_argument ',' IDENTIFIER ':' type		{
-															symtabInsert(localSymtab, $3, $5, true, localRef, NULL);
+															symtabInsert(localSymtab, $3, $5, true, localRef, NULL, NULL);
 															listnodeInsert(listnodeHead, $5, 0);
 															localRef++;
 														}
 		|	IDENTIFIER ':' type							{
-															symtabInsert(localSymtab, $1, $3, true, localRef, NULL);
+															symtabInsert(localSymtab, $1, $3, true, localRef, NULL, NULL);
 															listnodeInsert(listnodeHead, $3, 0);
 															localRef++;
 															$$=listnodeHead;
@@ -813,7 +816,7 @@ symtab* symtabCreate(char *name, symtabIndex *symtabIndexHead){
 	return head;
 }
 
-void symtabInsert(symtab *head, char *name, char *type, bool changeable, int value, listnode *parameterList){
+void symtabInsert(symtab *head, char *name, char *type, bool changeable, int value, char *string, listnode *parameterList){
 	/* check if the name is in the symbol table */
 	if(symtabLookup(head, name) == NULL){
 	/* Insert in the end of linked list*/
@@ -833,6 +836,13 @@ void symtabInsert(symtab *head, char *name, char *type, bool changeable, int val
 		new->changeable = changeable;
 		new->value = value;
 		new->parameterList = parameterList;
+		if(string != NULL){
+			char *nstring = (char*)malloc(sizeof(char)*strlen(string));
+			strcpy(nstring, string);
+			new->string = nstring;
+		}else{
+			new->string = NULL;
+		}
 		new->next = NULL;
 		current->next = new;
 	}else{
@@ -1018,21 +1028,37 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 	symtab *symbol;
 	if((symbol = symtabLookup(local, name)) != NULL){
 		// local
-		if(symbol->changeable == 1){
-			// variable
-			sprintf(result, "iload %d\n", symbol->value);
-		}else{
-			// constant: looking in symtab
-			sprintf(result, "sipush %d\n", symbol->value);
+		if(strcmp(symbol->type, "int") == 0){
+			if(symbol->changeable == 1){
+				// variable
+				sprintf(result, "iload %d\n", symbol->value);
+			}else{
+				// constant: looking in symtab
+				sprintf(result, "sipush %d\n", symbol->value);
+			}
+		}else if(strcmp(symbol->type, "string") == 0){
+			if(symbol->changeable == 1){
+				yyerror("!!!String Variable is illegle!!!");
+			}else{
+				sprintf(result, "ldc \"%s\"\n", symbol->string);
+			}
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
-		if(symbol->changeable == 1){
-			// variable
-			sprintf(result, "getstatic %s %s.%s\n", symbol->type, global->name, symbol->name);
-		}else{
-			// constant: looking in symtab, directly return the value
-			sprintf(result, "sipush %d\n", symbol->value);
+		if(strcmp(symbol->type, "int")){
+			if(symbol->changeable == 1){
+				// variable
+				sprintf(result, "getstatic %s %s.%s\n", symbol->type, global->name, symbol->name);
+			}else{
+				// constant: looking in symtab, directly return the value
+				sprintf(result, "sipush %d\n", symbol->value);
+			}
+		}else if(strcmp(symbol->type, "string")){
+			if(symbol->changeable == 1){
+				yyerror("!!!String Variable is illegle!!!");
+			}else{
+				sprintf(result, "ldc \"%s\"\n", symbol->string);
+			}
 		}
 	}else{
 		yyerror("!!!Symbol Not Found!!!");
