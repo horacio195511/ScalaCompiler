@@ -506,10 +506,10 @@ loop_statement:
 					fprintf(outputFile, "sipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
-					fprintf(outputFile, "iconst_0\n");
+					fprintf(outputFile, "iconst_1\n");
 					fprintf(outputFile, "goto F%d2\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "F%d1:\n", listnodeGetLast(forindex));
-					fprintf(outputFile, "iconst_1\n");
+					fprintf(outputFile, "iconst_0\n");
 					fprintf(outputFile, "F%d2:\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "ifeq F%d3\n", listnodeGetLast(forindex));
 				}else if($6 > $8){
@@ -523,10 +523,10 @@ loop_statement:
 					fprintf(outputFile, "sipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
-					fprintf(outputFile, "iconst_0\n");
+					fprintf(outputFile, "iconst_1\n");
 					fprintf(outputFile, "goto F%d2\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "F%d1:\n", listnodeGetLast(forindex));
-					fprintf(outputFile, "iconst_1\n");
+					fprintf(outputFile, "iconst_0\n");
 					fprintf(outputFile, "F%d2:\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "ifeq F%d3\n", listnodeGetLast(forindex));
 				}else{
