@@ -118,9 +118,9 @@ letter		[a-zA-Z0-9]
 
 <COMMENT>{
 \n	{
-		fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
+		fprintf(outputFile, "/* %d: %s*/\n", linenum++, buf);
 		LIST;
-		printf("%d: %s", linenum++, buf);
+		printf("%d: %s", linenum, buf);
 		buf[0] = '\0';
 	}
 

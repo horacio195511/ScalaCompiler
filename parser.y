@@ -27,6 +27,7 @@ typedef struct symtab{
 // really basic linken list sturcture, mostly for type checking
 typedef struct listnode{
 	char *val;
+	int value;
 	struct listnode *next;
 }listnode;
 
@@ -44,7 +45,7 @@ void symtabDump(symtab*);
 
 // function for linked list, and stack
 listnode* listnodeCreate();
-void listnodeInsert(listnode*, char*);
+void listnodeInsert(listnode*, char*, int);
 void listnodePop(listnode*);
 int listnodeGetLast(listnode*);
 listnode* listnodeLookup(listnode*, char*);
@@ -82,19 +83,13 @@ char *lastScope;
 FILE *outputFile;
 int localRef;
 
-int conRef;
-int maxConRef;
-
-int conCount;
-
-int loopRef;
-int maxLoopRef;
-
-int forRef;
-int maxForRef;
-
+// parameter for read
 int Pindex;
 int maxPindex;
+
+listnode *ifindex;
+listnode *whileindex;
+listnode *forindex;
 %}
 
 /* data type definition */
@@ -211,7 +206,8 @@ no_value_variable_declaration:
 												symtabInsert(localSymtab, $2, $4, true, localRef, NULL);
 												localRef++;
 												symtab *symbol = symtabLookup(localSymtab, $2);
-												fprintf(outputFile, "sipush %d\nistore %d\n", 0, symbol->value);
+												fprintf(outputFile, "sipush %d\n", 0);
+												fprintf(outputFile, "istore %d\n", symbol->value);
 											}
 										}
 		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL);}
@@ -300,12 +296,12 @@ method_declaration:
 formal_argument:
 			formal_argument ',' IDENTIFIER ':' type		{
 															symtabInsert(localSymtab, $3, $5, true, localRef, NULL);
-															listnodeInsert(listnodeHead, $5);
+															listnodeInsert(listnodeHead, $5, 0);
 															localRef++;
 														}
 		|	IDENTIFIER ':' type							{
 															symtabInsert(localSymtab, $1, $3, true, localRef, NULL);
-															listnodeInsert(listnodeHead, $3);
+															listnodeInsert(listnodeHead, $3, 0);
 															localRef++;
 															$$=listnodeHead;
 														}
@@ -431,15 +427,13 @@ oms:	oms statement | oms simple_statement | statement | simple_statement ;
 conditional_statement:
 			IF '(' boolean_expression ')' ACT sab_statment 
 			{
-				int prefix = linenum;
 				// goto exit
-				fprintf(outputFile, "goto I%d3\n", prefix); //3
+				fprintf(outputFile, "goto I%d3\n", listnodeGetLast(ifindex)); //3
 			}
 			ELSE
 			{
 				// false
-				fprintf(outputFile, "I%d2:\n", prefix); //2
-				maxConRef = max(maxConRef, conRef);
+				fprintf(outputFile, "I%d2:\n", listnodeGetLast(ifindex)); //2
 				// trash instruction to avoid empty tag
 				fprintf(outputFile, "iconst_1\n");
 				fprintf(outputFile, "pop\n");
@@ -447,8 +441,8 @@ conditional_statement:
 			sab_statment
 			{
 				// exit
-				fprintf(outputFile, "I%d3\n", prefix); //3
-				conCount++;
+				fprintf(outputFile, "I%d3:\n", listnodeGetLast(ifindex)); //3
+				listnodePop(ifindex);
 				// trash instruction to avoid empty tag
 				fprintf(outputFile, "iconst_1\n");
 				fprintf(outputFile, "pop\n");
@@ -456,25 +450,26 @@ conditional_statement:
 			}
 		|	IF '(' boolean_expression ')' ACT sab_statment
 			{
-				fprintf(outputFile, "I%d:\n", conRef++);
-				fprintf(outputFile, "I%d\n", conRef--);
-				fprintf(outputFile, "iconst_0\n");
-				fprintf(outputFile, "ifeq I%d\n", conRef);
-				fprintf(outputFile, "I%d\n", conRef++);
+				fprintf(outputFile, "I%d2:\n", listnodeGetLast(ifindex));
+				listnodePop(ifindex);
+				// trash instruction to avoid empty tag
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "pop\n");
 				Trace("Reduce to conditional statement\n");
 			}
 		;
 
 ACT:
 	{
+		listnodeInsert(ifindex, NULL, linenum);
 		// goto false
-		fprintf(outputFile, "I%d0\n", conRef++); //0
+		fprintf(outputFile, "I%d0\n", listnodeGetLast(ifindex)); //0
 		fprintf(outputFile, "iconst_0\n");
-		fprintf(outputFile, "goto I%d1\n", conRef--); //1
-		fprintf(outputFile, "I%d0:\n", conRef++); //0
+		fprintf(outputFile, "goto I%d1\n", listnodeGetLast(ifindex)); //1
+		fprintf(outputFile, "I%d0:\n", listnodeGetLast(ifindex)); //0
 		fprintf(outputFile, "iconst_1\n");
-		fprintf(outputFile, "I%d1:\n", conRef++); //1
-		fprintf(outputFile, "ifeq I%d2\n", conRef++); //2, goto else
+		fprintf(outputFile, "I%d1:\n", listnodeGetLast(ifindex)); //1
+		fprintf(outputFile, "ifeq I%d2\n", listnodeGetLast(ifindex)); //2, goto else
 	}
 	;
 
@@ -485,10 +480,9 @@ sab_statment:	simple_statement | block_statement;
 loop_statement:	
 			WHILE ACT1 '(' boolean_expression ')' ACT2 sab_statment
 			{
-				loopRef = loopRef-3;
-				fprintf(outputFile, "goto L%d\n", loopRef);
-				loopRef = loopRef+3;
-				fprintf(outputFile, "L%d:\n", loopRef++);
+				fprintf(outputFile, "goto L%d0\n", listnodeGetLast(whileindex));
+				fprintf(outputFile, "L%d3:\n", listnodeGetLast(whileindex));
+				listnodePop(whileindex);
 				// trash instruction to avoid empty tag
 				fprintf(outputFile, "iconst_1\n");
 				fprintf(outputFile, "pop\n");
@@ -498,73 +492,75 @@ loop_statement:
 				// $3 must be declared outside the for condition checking
 				symtab *symbol = scopeLookup(globalSymtab, localSymtab, $3);
 				// conditional area
-				forRef = maxForRef++;
-				fprintf(outputFile, "F%d:\n", forRef++);
+				listnodeInsert(forindex, NULL, linenum);
+				// store the parameter to id
+				fprintf(outputFile, "sipush %d\n", $6);
+				fprintf(outputFile, "istore %d\n", symbol->value);
+				fprintf(outputFile, "F%d0:\n", listnodeGetLast(forindex));
 				// increment or decrement the input ID
-				if($6 > $8){
+				if($6 < $8){
 					// increment
-					fprintf(outputFile, "iinc %d\n", symbol->value);
+					fprintf(outputFile, "iinc %d %d\n", symbol->value, 1);
 					// conditional check
 					fprintf(outputFile, "iload %d\n", symbol->value);
 					fprintf(outputFile, "sipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
-					fprintf(outputFile, "ifeq F%d\n", forRef++);
+					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_0\n");
-					fprintf(outputFile, "goto F%d\n", forRef--);
-					fprintf(outputFile, "F%d\n", forRef++);
+					fprintf(outputFile, "goto F%d2\n", listnodeGetLast(forindex));
+					fprintf(outputFile, "F%d1:\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_1\n");
-					fprintf(outputFile, "F%d:\n", forRef++);
-					fprintf(outputFile, "ifeq F%d\n", forRef--);
-				}else if($8 < $6){
+					fprintf(outputFile, "F%d2:\n", listnodeGetLast(forindex));
+					fprintf(outputFile, "ifeq F%d3\n", listnodeGetLast(forindex));
+				}else if($6 > $8){
 					// decrement
-					fprintf(outputFile, "sipush 1\n");
 					fprintf(outputFile, "iload %d\n", symbol->value);
+					fprintf(outputFile, "sipush 1\n");
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "istore %d\n", symbol->value);
 					// conditional check
 					fprintf(outputFile, "iload %d\n", symbol->value);
 					fprintf(outputFile, "sipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
-					fprintf(outputFile, "ifeq F%d\n", forRef++);
+					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_0\n");
-					fprintf(outputFile, "goto F%d\n", forRef--);
-					fprintf(outputFile, "F%d\n", forRef++);
+					fprintf(outputFile, "goto F%d2\n", listnodeGetLast(forindex));
+					fprintf(outputFile, "F%d1:\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_1\n");
-					fprintf(outputFile, "F%d:\n", forRef++);
-					fprintf(outputFile, "ifeq F%d\n", forRef--);
+					fprintf(outputFile, "F%d2:\n", listnodeGetLast(forindex));
+					fprintf(outputFile, "ifeq F%d3\n", listnodeGetLast(forindex));
 				}else{
 					// opearate only once
 				}
-				// conditional satement
 			}
 			sab_statment
 			{
-				forRef = forRef-3;
-				fprintf(outputFile, "goto F%d\n", forRef);
-				forRef = forRef+3;
-				fprintf(outputFile, "F%d:\n", forRef++);
+				fprintf(outputFile, "goto F%d0\n", listnodeGetLast(forindex));
+				fprintf(outputFile, "F%d3:\n", listnodeGetLast(forindex));
+				listnodePop(forindex);
 				// trash instruction to avoid empty tag
 				fprintf(outputFile, "iconst_1\n");
 				fprintf(outputFile, "pop\n");
-				Trace("reduce to loop statement");
+				Trace("reduce to loop statement\n");
 			}
 		;
 
 ACT1:
 	{
-		fprintf(outputFile, "L%d:\n", loopRef++);
+		listnodeInsert(whileindex, NULL, linenum);
+		fprintf(outputFile, "L%d0:\n", listnodeGetLast(whileindex));
 	}
 	;
 
 ACT2:
 	{
-		fprintf(outputFile, "L%d\n", loopRef++);
+		fprintf(outputFile, "L%d1\n", listnodeGetLast(whileindex));
 		fprintf(outputFile, "iconst_0\n");
-		fprintf(outputFile, "goto L%d\n", loopRef--);
-		fprintf(outputFile, "L%d:\n", loopRef++);
+		fprintf(outputFile, "goto L%d2\n", listnodeGetLast(whileindex));
+		fprintf(outputFile, "L%d1:\n", listnodeGetLast(whileindex));
 		fprintf(outputFile, "iconst_1\n");
-		fprintf(outputFile, "L%d:\n", loopRef++);
-		fprintf(outputFile, "ifeq L%d\n", loopRef);
+		fprintf(outputFile, "L%d2:\n", listnodeGetLast(whileindex));
+		fprintf(outputFile, "ifeq L%d3\n", listnodeGetLast(whileindex));
 	}
 	;
 
@@ -600,11 +596,11 @@ procedure_invocation:	IDENTIFIER
 parameter_expression:
 						parameter_expression ',' value 		{
 																// type checking
-																listnodeInsert(listnodeHead, $3);
+																listnodeInsert(listnodeHead, $3, 0);
 															}
 					|	value 								{
 																// type checking
-																listnodeInsert(listnodeHead, $1);
+																listnodeInsert(listnodeHead, $1, 0);
 																$$ = listnodeHead;
 															}
 					| 	{$$=NULL;}
@@ -734,11 +730,10 @@ void main(int argc, char *argv[])
 		outputFile = fopen(outputFileName, "w");
     	symtabIndexHead = symtabIndexCreate();
 		// parameter initialization
-		conRef = 0;
-		maxConRef = 0;
-		conCount = 0;
-		loopRef = 0;
-		forRef = 0;
+		ifindex = listnodeCreate();
+		whileindex = listnodeCreate();
+		forindex = listnodeCreate();
+
 		Pindex = 0;
 		maxPindex = 0;
 	}
@@ -876,7 +871,7 @@ listnode* listnodeCreate(){
 	return head;
 }
 
-void listnodeInsert(listnode *head, char *val){
+void listnodeInsert(listnode *head, char *val, int value){
 	/* check if the name is in the symbol table */
 	/* Insert in the end of linked list*/
 	listnode *current = head;
@@ -886,9 +881,15 @@ void listnodeInsert(listnode *head, char *val){
 	}
 	// insert
 	listnode *new = (listnode*)malloc(sizeof(listnode));
-	char *nval = (char*)malloc(sizeof(char)*strlen(val));
-	strcpy(nval, val);
-	new->val = nval;
+	if(val != NULL){
+		char *nval = (char*)malloc(sizeof(char)*strlen(val));
+		strcpy(nval, val);
+		new->val = nval;
+		new->value = 0;
+	}else{
+		new->val = NULL;
+		new->value = value;
+	}
 	new->next = NULL;
 	current->next = new;
 }
@@ -906,14 +907,13 @@ void listnodePop(listnode* head){
 	free(current);
 }
 // get the value of the last node
-int listnodeGetLast(listnode*){
+int listnodeGetLast(listnode *head){
 	listnode* current = head;
-	listnode* last;
 	while(current->next != NULL){
 		// last to last two, current to last one
-		last = current;
 		current = current->next;
 	}
+	return current->value;
 }
 
 listnode* listnodeLookup(listnode *head, char *val){
