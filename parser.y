@@ -42,10 +42,11 @@ void symtabInsert(symtab*, char*, char*, bool, int, listnode*);
 symtab* symtabLookup(symtab*, char*);
 void symtabDump(symtab*);
 
-// function for linked list
+// function for linked list, and stack
 listnode* listnodeCreate();
 void listnodeInsert(listnode*, char*);
-listnode* listnodePop(listnode*);
+void listnodePop(listnode*);
+int listnodeGetLast(listnode*);
 listnode* listnodeLookup(listnode*, char*);
 void listnodeDump(listnode*);
 char* getParamList(listnode*);
@@ -61,7 +62,10 @@ extern int linenum;
 
 // bytecode generation
 char* loadSymbol(symtab*, symtab*, char*);
-char* storeSymbol(symtab*, symtab*, char*, int);
+char* storeSymbol(symtab*, symtab*, char*);
+
+// math function
+int max(int, int);
 
 // head is point to the symbol table of current scope
 symtabIndex *symtabIndexHead;
@@ -77,8 +81,20 @@ listnode *listnodeHead;
 char *lastScope;
 FILE *outputFile;
 int localRef;
+
 int conRef;
+int maxConRef;
+
+int conCount;
+
 int loopRef;
+int maxLoopRef;
+
+int forRef;
+int maxForRef;
+
+int Pindex;
+int maxPindex;
 %}
 
 /* data type definition */
@@ -322,7 +338,7 @@ simple_statement:
 			IDENTIFIER '=' num_expression	{
 												symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 												// value assignment
-												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name, symbol->value);
+												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name);
 												fprintf(outputFile, "%s", out);
 											}
 		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
@@ -356,7 +372,52 @@ simple_statement:
 				}
 				
 			}
-		|	READ IDENTIFIER
+		|	READ IDENTIFIER			{
+										// scan through all of the character in stream
+										// scan until see the linefeed=10, while loop
+										// i=15 for current character
+										// conditional block
+										Pindex = ++maxPindex;
+										fprintf(outputFile, "P%d:\n", Pindex++); //0
+										// read the next character
+										fprintf(outputFile, "getstatic java.io.InputStream java.lang.System.in\n");
+										fprintf(outputFile, "invokevirtual int java.io.InputStream.read()\n");
+										// see if it is equal to 10
+										// store the character first
+										fprintf(outputFile, "istore 14\n");
+										// see if it is equal to 10
+										fprintf(outputFile, "iload 14\n");
+										fprintf(outputFile, "sipush 10\n");
+										fprintf(outputFile, "isub\n");
+										fprintf(outputFile, "ifeq P%d\n", Pindex++); //1
+										fprintf(outputFile, "iconst_1\n");
+										fprintf(outputFile, "goto P%d\n", Pindex--); //2
+										fprintf(outputFile, "P%d:\n", Pindex++); //1
+										fprintf(outputFile, "iconst_0\n");
+										fprintf(outputFile, "P%d:\n", Pindex++); //2
+										fprintf(outputFile, "ifeq P%d\n", Pindex); //3
+										maxPindex = max(maxPindex, Pindex);
+										// no, add to the identifier
+										// first multiply the number in local variable by 10
+										fprintf(outputFile, "sipush 10\n");
+										char *out = loadSymbol(globalSymtab, localSymtab, $2);
+										fprintf(outputFile, "%s", out);
+										fprintf(outputFile, "imul\n");
+										// convert from ascii to int number
+										fprintf(outputFile, "iload 14\n");
+										fprintf(outputFile, "sipush 48\n");
+										fprintf(outputFile, "isub\n");
+										fprintf(outputFile, "iadd\n");
+										out = storeSymbol(globalSymtab, localSymtab, $2);
+										fprintf(outputFile, "%s", out);
+										// loop block
+										// yes, pop it off and escapa the loop
+										Pindex = Pindex-3;
+										fprintf(outputFile, "goto P%d\n", Pindex); //0
+										Pindex = Pindex+3;
+										fprintf(outputFile, "P%d:\n", Pindex); //3
+										// translate to ascii code
+									}
 		|	RETURN					{fprintf(outputFile, "return\n");}
 		|	RETURN num_expression	{fprintf(outputFile, "ireturn\n");}
 		;
@@ -370,28 +431,50 @@ oms:	oms statement | oms simple_statement | statement | simple_statement ;
 conditional_statement:
 			IF '(' boolean_expression ')' ACT sab_statment 
 			{
-				fprintf(outputFile, "goto Lexit\n");
+				int prefix = linenum;
+				// goto exit
+				fprintf(outputFile, "goto I%d3\n", prefix); //3
 			}
 			ELSE
 			{
-				fprintf(outputFile, "Lfalse:\n");
+				// false
+				fprintf(outputFile, "I%d2:\n", prefix); //2
+				maxConRef = max(maxConRef, conRef);
+				// trash instruction to avoid empty tag
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "pop\n");
 			}
 			sab_statment
 			{
-				fprintf(outputFile, "Lexit:\n");
+				// exit
+				fprintf(outputFile, "I%d3\n", prefix); //3
+				conCount++;
+				// trash instruction to avoid empty tag
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "pop\n");
 				Trace("Reduce to conditional statement\n");
 			}
-		|
-			IF '(' boolean_expression ')' ACT sab_statment
+		|	IF '(' boolean_expression ')' ACT sab_statment
 			{
-				fprintf(outputFile, "Lfalse:\n");
+				fprintf(outputFile, "I%d:\n", conRef++);
+				fprintf(outputFile, "I%d\n", conRef--);
+				fprintf(outputFile, "iconst_0\n");
+				fprintf(outputFile, "ifeq I%d\n", conRef);
+				fprintf(outputFile, "I%d\n", conRef++);
 				Trace("Reduce to conditional statement\n");
 			}
 		;
 
 ACT:
 	{
-		fprintf(outputFile, "Lfalse\n");
+		// goto false
+		fprintf(outputFile, "I%d0\n", conRef++); //0
+		fprintf(outputFile, "iconst_0\n");
+		fprintf(outputFile, "goto I%d1\n", conRef--); //1
+		fprintf(outputFile, "I%d0:\n", conRef++); //0
+		fprintf(outputFile, "iconst_1\n");
+		fprintf(outputFile, "I%d1:\n", conRef++); //1
+		fprintf(outputFile, "ifeq I%d2\n", conRef++); //2, goto else
 	}
 	;
 
@@ -400,52 +483,90 @@ block_statement:	'{' zmvcd oms '}';
 sab_statment:	simple_statement | block_statement;
 
 loop_statement:	
-			WHILE 
+			WHILE ACT1 '(' boolean_expression ')' ACT2 sab_statment
 			{
-				fprintf(outputFile, "Lbegin:\n");
-			}
-			'(' boolean_expression ')'
-			{
-				fprintf(outputFile, "Lexit\n");
-			}
-			sab_statment
-			{
-				fprintf(outputFile, "goto Lbegin\n");
-				fprintf(outputFile, "Lexit:\n");
+				loopRef = loopRef-3;
+				fprintf(outputFile, "goto L%d\n", loopRef);
+				loopRef = loopRef+3;
+				fprintf(outputFile, "L%d:\n", loopRef++);
+				// trash instruction to avoid empty tag
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "pop\n");
 			}
 		|	FOR '(' IDENTIFIER '<''-' NUMBER TO NUMBER ')'
 			{
-				char name[10];
-				// naming the symtab with line number
-				sprintf(name, "for-%d", linenum);
-				localSymtab = symtabCreate(name, symtabIndexHead);
-				localRef=0;
-				symtabInsert(localSymtab, $3, "int", true, localRef, NULL);
+				// $3 must be declared outside the for condition checking
 				symtab *symbol = scopeLookup(globalSymtab, localSymtab, $3);
-				fprintf(outputFile, "Fbegin:\n");
+				// conditional area
+				forRef = maxForRef++;
+				fprintf(outputFile, "F%d:\n", forRef++);
 				// increment or decrement the input ID
 				if($6 > $8){
 					// increment
 					fprintf(outputFile, "iinc %d\n", symbol->value);
+					// conditional check
+					fprintf(outputFile, "iload %d\n", symbol->value);
+					fprintf(outputFile, "sipush %d\n", $8);
+					fprintf(outputFile, "isub\n");
+					fprintf(outputFile, "ifeq F%d\n", forRef++);
+					fprintf(outputFile, "iconst_0\n");
+					fprintf(outputFile, "goto F%d\n", forRef--);
+					fprintf(outputFile, "F%d\n", forRef++);
+					fprintf(outputFile, "iconst_1\n");
+					fprintf(outputFile, "F%d:\n", forRef++);
+					fprintf(outputFile, "ifeq F%d\n", forRef--);
 				}else if($8 < $6){
 					// decrement
-					fprintf(outputFile, "idec %d\n", symbol->value);
+					fprintf(outputFile, "sipush 1\n");
+					fprintf(outputFile, "iload %d\n", symbol->value);
+					fprintf(outputFile, "isub\n");
+					fprintf(outputFile, "istore %d\n", symbol->value);
+					// conditional check
+					fprintf(outputFile, "iload %d\n", symbol->value);
+					fprintf(outputFile, "sipush %d\n", $8);
+					fprintf(outputFile, "isub\n");
+					fprintf(outputFile, "ifeq F%d\n", forRef++);
+					fprintf(outputFile, "iconst_0\n");
+					fprintf(outputFile, "goto F%d\n", forRef--);
+					fprintf(outputFile, "F%d\n", forRef++);
+					fprintf(outputFile, "iconst_1\n");
+					fprintf(outputFile, "F%d:\n", forRef++);
+					fprintf(outputFile, "ifeq F%d\n", forRef--);
 				}else{
 					// opearate only once
 				}
 				// conditional satement
-				fprintf(outputFile, "iload %d\n", symbol->value);
-				fprintf(outputFile, "sipush %d\n", $8);
-				fprintf(outputFile, "isub\n");
-				fprintf(outputFile, "ifeq Fquit\n");
 			}
 			sab_statment
 			{
-				fprintf(outputFile, "goto Fbegin\n");
-				fprintf(outputFile, "hello");
+				forRef = forRef-3;
+				fprintf(outputFile, "goto F%d\n", forRef);
+				forRef = forRef+3;
+				fprintf(outputFile, "F%d:\n", forRef++);
+				// trash instruction to avoid empty tag
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "pop\n");
 				Trace("reduce to loop statement");
 			}
 		;
+
+ACT1:
+	{
+		fprintf(outputFile, "L%d:\n", loopRef++);
+	}
+	;
+
+ACT2:
+	{
+		fprintf(outputFile, "L%d\n", loopRef++);
+		fprintf(outputFile, "iconst_0\n");
+		fprintf(outputFile, "goto L%d\n", loopRef--);
+		fprintf(outputFile, "L%d:\n", loopRef++);
+		fprintf(outputFile, "iconst_1\n");
+		fprintf(outputFile, "L%d:\n", loopRef++);
+		fprintf(outputFile, "ifeq L%d\n", loopRef);
+	}
+	;
 
 procedure_invocation:	IDENTIFIER 
 						{
@@ -457,7 +578,7 @@ procedure_invocation:	IDENTIFIER
 							// some of the function should lookup in the program scope
 							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 							if(symbol == NULL){
-								yyerror("!!!Couldn't resolve the symbol!!!\n");
+								yyerror("!!!Couldn't resolve the method symbol!!!\n");
 							}
 							listnode *idParam = symbol->parameterList;
 							listnode *inputParam = $4;
@@ -550,27 +671,27 @@ num_expression:
 boolean_expression:	
 			num_expression '<' num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifge ");
+															fprintf(outputFile, "iflt ");
 														}
 		|	num_expression LESSEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifgt ");
+															fprintf(outputFile, "ifle ");
 														}
 		|	num_expression LARGEEQUAL num_expression	{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "iflt ");
+															fprintf(outputFile, "ifge ");
 														}
 		|	num_expression '>' num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifle ");
+															fprintf(outputFile, "ifgt ");
 														}
 		|	num_expression EQUAL num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifne ");
+															fprintf(outputFile, "ifeq ");
 														}
 		|	num_expression NOTEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifeq ");
+															fprintf(outputFile, "ifnq ");
 														}
 		|	boolean_expression AND boolean_expression
 		|	boolean_expression OR boolean_expression
@@ -614,6 +735,12 @@ void main(int argc, char *argv[])
     	symtabIndexHead = symtabIndexCreate();
 		// parameter initialization
 		conRef = 0;
+		maxConRef = 0;
+		conCount = 0;
+		loopRef = 0;
+		forRef = 0;
+		Pindex = 0;
+		maxPindex = 0;
 	}
     
     /* perform parsing */
@@ -766,7 +893,7 @@ void listnodeInsert(listnode *head, char *val){
 	current->next = new;
 }
 // get the last listnode and delete it from list
-listnode* listnodePop(listnode* head){
+void listnodePop(listnode* head){
 	listnode* current = head;
 	listnode* last;
 	while(current->next != NULL){
@@ -774,8 +901,19 @@ listnode* listnodePop(listnode* head){
 		last = current;
 		current = current->next;
 	}
+	// dangling pointer memory leak here, but who care??
 	last->next = NULL;
-	return current;
+	free(current);
+}
+// get the value of the last node
+int listnodeGetLast(listnode*){
+	listnode* current = head;
+	listnode* last;
+	while(current->next != NULL){
+		// last to last two, current to last one
+		last = current;
+		current = current->next;
+	}
 }
 
 listnode* listnodeLookup(listnode *head, char *val){
@@ -842,7 +980,7 @@ int listcmp(listnode *l1, listnode *l2){
 	return result;
 }
 
-char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
+char* storeSymbol(symtab *global, symtab *local, char *name){
 	char result[100];
 	char *str = &result[0];
 	symtab *symbol;
@@ -850,7 +988,7 @@ char* storeSymbol(symtab *global, symtab *local, char *name, int ref){
 		// local
 		if(symbol->changeable == true){
 			// variable
-			sprintf(result, "istore %d\n", ref);
+			sprintf(result, "istore %d\n", symbol->value);
 		}else if(symbol->changeable == false){
 			// constant
 			yyerror("!!!Trying to modify constant!!!");
@@ -901,4 +1039,8 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 		str = NULL;
 	}
 	return str;
+}
+
+int max(int a, int b){
+	return a>b? a:b;
 }
