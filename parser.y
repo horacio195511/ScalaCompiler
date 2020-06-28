@@ -20,6 +20,8 @@ typedef struct symtab{
 	// constant: value
 	// variable: reference
 	int value;
+	// the value of string would be array if the id is defined as array
+	// it's a bad implementation but it work fine....
 	char *string;
 	struct listnode *parameterList;
 	struct symtab *next;
@@ -158,9 +160,7 @@ constant_declaration:
 			VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, false, $6, NULL, NULL);}
 		|	VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
 		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
-		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{
-															symtabInsert(localSymtab, $2, $4, false, 0, $6, NULL);
-														}
+		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, false, 0, $6, NULL);}
 		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
 		|	no_type_constant_declaration
 		;
@@ -245,7 +245,15 @@ no_type_value_variable_declaration:
 		;
 
 array_declaration:	
-			VAR IDENTIFIER ':' type '[' NUMBER ']'		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+			VAR IDENTIFIER ':' type '[' NUMBER ']'		{
+															// symbol table operation
+															symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
+															// code generation
+															symtab *symbol = scopeLookup(globalSymtab, localSymtab, $2);
+															fprintf(outputFile, "sipush $6\n");
+															fprintf(outputFile, "newarray int\n");
+															fprintf(outputFile, "astore %d\n", symbol->value);
+														}
 		; 
 
 method_declaration:
@@ -334,13 +342,32 @@ statement:
 		;
 		
 simple_statement:
-			IDENTIFIER '=' num_expression	{
+		procedure_invocation
+		|	IDENTIFIER '=' num_expression	{
 												symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 												// value assignment
 												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name);
 												fprintf(outputFile, "%s", out);
 											}
-		|	IDENTIFIER '[' NUMBER ']' '=' num_expression
+		|	IDENTIFIER '[' num_expression ']' '=' 
+			{
+				// type checking
+				symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+				if(strcmp(symbol->string, "array") == 0){
+					// check the length of index is in bound
+					// get the array lenght
+					fprintf(outputFile, "aload %d\n", symbol->value);
+					
+					// load array object
+					fprintf(outputFile, "aload %d\n", symbol->value);
+					fprintf(outputFile, "sipush $3\n");
+				}
+			}
+			num_expression
+			{
+				// store the value to array
+				fprintf(outputFile, "aistore\n");
+			}
 		|	PRINT 
 			{
 				fprintf(outputFile, "getstatic java.io.PrintStream java.lang.System.out\n");
@@ -421,7 +448,7 @@ simple_statement:
 		|	RETURN num_expression	{fprintf(outputFile, "ireturn\n");}
 		;
 
-zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | ;
+zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | zmvcd array_declaration | ;
 
 zms:	zms statement | zms simple_statement | ;
 
@@ -585,7 +612,11 @@ procedure_invocation:	IDENTIFIER
 								yyerror("!!!Type mismatch!!!");
 							}
 							// code generation
-							fprintf(outputFile, "invokestatic int %s.%s(", globalSymtab->name, $1);
+							if(strcmp(symbol->type, "int") == 0){
+								fprintf(outputFile, "invokestatic int %s.%s(", globalSymtab->name, $1);
+							}else if(strcmp(symbol->type, "void") == 0){
+								fprintf(outputFile, "invokestatic void %s.%s(", globalSymtab->name, $1);
+							}
 							while(inputParam->next != NULL){
 								inputParam = inputParam->next;
 								fprintf(outputFile, "%s ", inputParam->val);
@@ -625,6 +656,20 @@ value:
 									symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 									$$ = symbol->type;
 								}
+	|	IDENTIFIER '[' 
+		{
+			// check if the IDENTIFIER is an array
+			symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+			if(strcmp(symbol->string, "array") == 0){
+				fprintf(outputFile, "aload %d\n", symbol->value);
+			}else{
+				yyerror("!!!Identifier could not be index!!!");
+			}
+		}
+		num_expression ']'	
+		{
+			fprintf(outputFile, "iaload\n");
+		}
 	|	procedure_invocation	{$$=$1;}
 	;
 
@@ -692,8 +737,56 @@ boolean_expression:
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifnq ");
 														}
-		|	boolean_expression AND boolean_expression
-		|	boolean_expression OR boolean_expression
+		|	boolean_expression	
+			{
+				int index = linenum;
+				fprintf(outputFile, "A%d0\n", index);
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "goto A%d1\n", index);
+				fprintf(outputFile, "A%d0:\n", index);
+				fprintf(outputFile, "iconst_0\n");
+				fprintf(outputFile, "A%d1:\n", index);
+			}
+			AND boolean_expression
+			{
+				int index = linenum;
+				index++;
+				fprintf(outputFile, "A%d0\n", index);
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "goto A%d1\n", index);
+				fprintf(outputFile, "A%d0:\n", index);
+				fprintf(outputFile, "iconst_0\n");
+				fprintf(outputFile, "A%d1:\n", index);
+				fprintf(outputFile, "ior\n");
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "isub\n");
+				fprintf(outputFile, "ifeq ");
+			}
+		|	boolean_expression
+			{
+				int index = linenum;
+				fprintf(outputFile, "O%d0\n", index);
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "goto O%d1\n", index);
+				fprintf(outputFile, "O%d0:\n", index);
+				fprintf(outputFile, "iconst_0\n");
+				fprintf(outputFile, "O%d1:\n", index);
+			}
+			OR boolean_expression
+			{
+				int index = linenum;
+				index++;
+				fprintf(outputFile, "O%d0\n", index);
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "goto A%d1\n", index);
+				fprintf(outputFile, "O%d0:\n", index);
+				fprintf(outputFile, "iconst_0\n");
+				fprintf(outputFile, "O%d1:\n", index);
+				fprintf(outputFile, "iand\n");
+				fprintf(outputFile, "iconst_1\n");
+				fprintf(outputFile, "isub\n");
+				fprintf(outputFile, "ifeq ");
+			}
 		|	'!' boolean_expression %prec '!'
 		|	bool
 		;
@@ -1045,7 +1138,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
-		if(strcmp(symbol->type, "int")){
+		if(strcmp(symbol->type, "int") == 0){
 			if(symbol->changeable == 1){
 				// variable
 				sprintf(result, "getstatic %s %s.%s\n", symbol->type, global->name, symbol->name);
@@ -1053,7 +1146,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 				// constant: looking in symtab, directly return the value
 				sprintf(result, "sipush %d\n", symbol->value);
 			}
-		}else if(strcmp(symbol->type, "string")){
+		}else if(strcmp(symbol->type, "string") == 0){
 			if(symbol->changeable == 1){
 				yyerror("!!!String Variable is illegle!!!");
 			}else{

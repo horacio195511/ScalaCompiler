@@ -112,7 +112,8 @@ letter		[a-zA-Z0-9]
 
 [ \t]*	{LIST;}
 
-^\/\*	{
+\/\*	{
+			LIST;
 			BEGIN COMMENT;
 		}
 
@@ -124,10 +125,10 @@ letter		[a-zA-Z0-9]
 		buf[0] = '\0';
 	}
 
-\*\/\n$	{
-			fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
+\*\/\n	{
+			fprintf(outputFile, "/* %d: %s*/\n", linenum++, buf);
 			LIST;
-			printf("%d: %s", linenum++, buf);
+			printf("%d: %s", linenum, buf);
 			buf[0] = '\0';
 			BEGIN(INITIAL);
 		}
