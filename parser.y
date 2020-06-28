@@ -140,20 +140,20 @@ program: 	OBJECT IDENTIFIER
 			declaration
 			{
 				fprintf(outputFile, "}\n");
-				Trace("reduce to program\n");
+				Trace("Reduce to program\n");
 			}
 			'}'
 			;
 
 declaration:
-			constant_declaration				{Trace("reduce to constant declaration\n");}
-		|	variable_declaration				{Trace("reduce to variable declaration\n");}
-		|	array_declaration					{Trace("reduce to array declaration\n");}
-		|	method_declaration					{Trace("reduce to method declaration\n");}
-		|	declaration constant_declaration	{Trace("reduce to constant declaration\n");}
-		|	declaration variable_declaration	{Trace("reduce to variable declaration\n");}
-		|	declaration array_declaration		{Trace("reduce to array declaration\n");}
-		|	declaration method_declaration		{Trace("reduce to method declaration\n");}
+			constant_declaration				{Trace("Reduce to constant declaration\n");}
+		|	variable_declaration				{Trace("Reduce to variable declaration\n");}
+		|	array_declaration					{Trace("Reduce to array declaration\n");}
+		|	method_declaration					{Trace("Reduce to method declaration\n");}
+		|	declaration constant_declaration	{Trace("Reduce to constant declaration\n");}
+		|	declaration variable_declaration	{Trace("Reduce to variable declaration\n");}
+		|	declaration array_declaration		{Trace("Reduce to array declaration\n");}
+		|	declaration method_declaration		{Trace("Reduce to method declaration\n");}
 		;
 
 constant_declaration:
@@ -169,27 +169,26 @@ no_type_constant_declaration:
 			VAL IDENTIFIER '=' NUMBER		{symtabInsert(localSymtab, $2, "int", false, $4, NULL, NULL);}
 		|	VAL IDENTIFIER '=' REAL			{symtabInsert(localSymtab, $2, "float", false, 0, NULL, NULL);}
 		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(localSymtab, $2, "bool", false, 0, NULL, NULL);}
-		|	VAL IDENTIFIER '=' STRING_VAL		{symtabInsert(localSymtab, $2, "string", false, 0, $4, NULL);}
+		|	VAL IDENTIFIER '=' STRING_VAL	{symtabInsert(localSymtab, $2, "string", false, 0, $4, NULL);}
 		;
 
 variable_declaration:	
 			VAR IDENTIFIER ':' INT '=' NUMBER		{
-															// the genereated program differed from what scope it's in
-															if(localSymtab == globalSymtab){
-																// global scope
-																symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
-																// fprintf(outputFile, "sipush %d\n", $6);
-																fprintf(outputFile, "field static int %s\n", $2);
-																// fprintf(outputFile, "pustatic int %s.%s", globalSymtab->name, $2);
-															}else{
-																// local scope
-																symtabInsert(localSymtab, $2, $4, true, localRef, NULL, NULL);
-																localRef++;
-																symtab *symbol = symtabLookup(localSymtab, $2);
-																fprintf(outputFile, "sipush %d\n", $6);
-																fprintf(outputFile, "istore %d\n", symbol->value);
-															}
+														// the genereated program differed from what scope it's in
+														if(localSymtab == globalSymtab){
+															// global scope
+															symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
+															fprintf(outputFile, "field static int %s\n", $2);
+															fprintf(outputFile, "sipush %d\n", $6);
+															fprintf(outputFile, "pustatic int %s.%s\n", globalSymtab->name, $2);
+														}else{
+															// local scope
+															symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
+															symtab *symbol = symtabLookup(localSymtab, $2);
+															fprintf(outputFile, "sipush %d\n", $6);
+															fprintf(outputFile, "istore %d\n", symbol->value);
 														}
+													}
 		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
@@ -206,8 +205,7 @@ no_value_variable_declaration:
 												fprintf(outputFile, "field static int %s\n", $2);
 											}else{
 												// local scope
-												symtabInsert(localSymtab, $2, $4, true, localRef, NULL, NULL);
-												localRef++;
+												symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
 												symtab *symbol = symtabLookup(localSymtab, $2);
 												fprintf(outputFile, "sipush %d\n", 0);
 												fprintf(outputFile, "istore %d\n", symbol->value);
@@ -230,8 +228,7 @@ no_type_variable_declaration:
 													// fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
 												}else{
 													// local scope
-													symtabInsert(localSymtab, $2, "int", true, localRef, NULL, NULL);
-													localRef++;
+													symtabInsert(localSymtab, $2, "int", true, localRef++, NULL, NULL);
 													symtab *symbol = symtabLookup(localSymtab, $2);
 													fprintf(outputFile, "sipush %d\n", $4);
 													fprintf(outputFile, "istore %d\n", symbol->value);
@@ -306,14 +303,12 @@ method_declaration:
 
 formal_argument:
 			formal_argument ',' IDENTIFIER ':' type		{
-															symtabInsert(localSymtab, $3, $5, true, localRef, NULL, NULL);
+															symtabInsert(localSymtab, $3, $5, true, localRef++, NULL, NULL);
 															listnodeInsert(listnodeHead, $5, 0);
-															localRef++;
 														}
 		|	IDENTIFIER ':' type							{
-															symtabInsert(localSymtab, $1, $3, true, localRef, NULL, NULL);
+															symtabInsert(localSymtab, $1, $3, true, localRef++, NULL, NULL);
 															listnodeInsert(listnodeHead, $3, 0);
-															localRef++;
 															$$=listnodeHead;
 														}
 		|	{
@@ -348,6 +343,7 @@ simple_statement:
 												// value assignment
 												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name);
 												fprintf(outputFile, "%s", out);
+												Trace("Reduce to identifier ");
 											}
 		|	IDENTIFIER '[' num_expression ']' '=' 
 			{
@@ -571,7 +567,7 @@ loop_statement:
 				// trash instruction to avoid empty tag
 				fprintf(outputFile, "iconst_1\n");
 				fprintf(outputFile, "pop\n");
-				Trace("reduce to loop statement\n");
+				Trace("Reduce to loop statement\n");
 			}
 		;
 
@@ -837,6 +833,7 @@ void main(int argc, char *argv[])
     /* perform parsing */
     if (yyparse() == 1){
 		yyerror("Parsing error !");     /* syntax error */
+		fclose(outputFile);
 	}
 	else{
 		// check if there is any main method
