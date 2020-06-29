@@ -112,7 +112,8 @@ listnode *forindex;
 /* typed token */
 %token <fval> REAL
 %token <ival> NUMBER
-%token <string> INT STRING BOOLEAN FLOAT BOOL CHAR IDENTIFIER STRING_VAL TRUE FALSE
+%token <bval> BOOL
+%token <string> INT STRING BOOLEAN FLOAT CHAR IDENTIFIER STRING_VAL TRUE FALSE
 
 %type <string> type type_exp procedure_invocation value num_expression
 %type <listnode> parameter_expression formal_argument
@@ -224,8 +225,8 @@ no_type_variable_declaration:
 													// global scope
 													symtabInsert(localSymtab, $2, "int", true, 0, NULL, NULL);
 													fprintf(outputFile, "field static int %s\n", $2);
-													// fprintf(outputFile, "bipush %d\n", $4);
-													// fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
+													fprintf(outputFile, "bipush %d\n", $4);
+													fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
 												}else{
 													// local scope
 													symtabInsert(localSymtab, $2, "int", true, localRef++, NULL, NULL);
@@ -292,9 +293,11 @@ method_declaration:
 			{
 				symtab *symbol = symtabLookup(globalSymtab, $2);
 				if(strcmp(symbol->type, "void") == 0){
+					// no return statement is runtime error in JVM
 					fprintf(outputFile, "return\n");
 					fprintf(outputFile, "}\n");
 				}else{
+					// check the return type
 					fprintf(outputFile, "}\n");
 				}
 			}
@@ -355,10 +358,10 @@ simple_statement:
 						// load array object
 						fprintf(outputFile, "aload %d\n", symbol->value);
 					}else{
-						yyerror("!!!Identifier is not an array!!!");
+						yyerror("Identifier is not an array");
 					}
 				}else{
-					yyerror("!!!Symbol not found!!!");
+					yyerror("Symbol not found");
 				}
 				
 			}
@@ -444,7 +447,11 @@ simple_statement:
 										// translate to ascii code
 									}
 		|	RETURN					{fprintf(outputFile, "return\n");}
-		|	RETURN num_expression	{fprintf(outputFile, "ireturn\n");}
+		|	RETURN num_expression	{
+										// check if the return type is match with scope's return type
+										
+										fprintf(outputFile, "ireturn\n");
+									}
 		;
 
 zmvcd:	zmvcd variable_declaration | zmvcd constant_declaration | zmvcd array_declaration | ;
@@ -603,12 +610,12 @@ procedure_invocation:	IDENTIFIER
 							// some of the function should lookup in the program scope
 							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
 							if(symbol == NULL){
-								yyerror("!!!Couldn't resolve the method symbol!!!\n");
+								yyerror("Couldn't resolve the method symbol\n");
 							}
 							listnode *idParam = symbol->parameterList;
 							listnode *inputParam = $4;
 							if(listcmp(idParam, inputParam) != 0){
-								yyerror("!!!Type mismatch!!!");
+								yyerror("Type mismatch");
 							}
 							// code generation
 							if(strcmp(symbol->type, "int") == 0){
@@ -662,7 +669,7 @@ value:
 			if(strcmp(symbol->string, "array") == 0){
 				fprintf(outputFile, "aload %d\n", symbol->value);
 			}else{
-				yyerror("!!!Identifier could not be index!!!");
+				yyerror("Identifier could not be index");
 			}
 		}
 		num_expression ']'	
@@ -682,25 +689,25 @@ num_expression:
 			num_expression '+' num_expression	{
 													fprintf(outputFile, "iadd\n");
 													// type checking
-													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("expression type mismatch");
 													else $$=$1;
 												}
 		|	num_expression '-' num_expression	{
 													fprintf(outputFile, "isub\n");
 													// type checking
-													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("expression type mismatch");
 													else $$=$1;
 												}
 		|	num_expression '*' num_expression	{
 													fprintf(outputFile, "imul\n");
 													// type checking
-													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("expression type mismatch");
 													else $$=$1;
 												}
 		|	num_expression '/' num_expression	{
 													fprintf(outputFile, "idiv\n");
 													// type checking
-													if(strcmp($1, $3) != 0)yyerror("!!!expression type mismatch!!!");
+													if(strcmp($1, $3) != 0)yyerror("expression type mismatch");
 													else $$=$1;
 												}
 		|	'-' num_expression %prec UMINUS		{
@@ -793,7 +800,7 @@ boolean_expression:
 
 void yyerror(char *msg)
 {
-    fprintf(stderr, "%s @line: %d\n", msg, linenum);
+    fprintf(stderr, "!!!--%s--!!!@line: %d\n", msg, linenum);
 }
 
 void main(int argc, char *argv[])
@@ -835,13 +842,15 @@ void main(int argc, char *argv[])
     
     /* perform parsing */
     if (yyparse() == 1){
-		yyerror("Parsing error !");     /* syntax error */
+		yyerror("Parsing error");     /* syntax error */
 		fclose(outputFile);
 	}
 	else{
-		// check if there is any main method
 		fclose(outputFile);
+		// check if there is any main method
+		symtabIndex *symbol = symtabIndexLookup(symtabIndexHead, "main");
 		symtabIndexDump(symtabIndexHead);
+		if(symbol == NULL) yyerror("There are no main program entry point");
 	}
 }
 
@@ -867,7 +876,7 @@ void symtabIndexInsert(symtabIndex *head, symtab *table, char *name){
 		new->next = NULL;
 		current->next = new;
 	}else{
-		yyerror("!!!This symbol table name is redifined!!!");
+		yyerror("This symbol table name is redifined");
 	}
 }
 
@@ -939,7 +948,7 @@ void symtabInsert(symtab *head, char *name, char *type, bool changeable, int val
 		new->next = NULL;
 		current->next = new;
 	}else{
-		yyerror("!!!This symbol name is redifined!!!");
+		yyerror("This symbol name is redifined");
 	}
 }
 
@@ -1052,7 +1061,7 @@ symtab* scopeLookup(symtab *global, symtab *local, char *name){
 		return symbol;
 	}else{
 		char err[500];
-		sprintf(err, "!!!Input id \"%s\" doesn't exist in local or global scope!!!", name);
+		sprintf(err, "Input id \"%s\" doesn't exist in local or global scope", name);
 		yyerror(err);
 		return NULL;
 	}
@@ -1071,10 +1080,10 @@ int listcmp(listnode *l1, listnode *l2){
 		if(current1->next != NULL && current2->next != NULL){
 			if(strcmp(current1->val, current2->val) != 0)result++;
 		}else if(current1->next != NULL && current2->next == NULL){
-			yyerror("!!!Length of Parameter aren't the same!!!");
+			yyerror("Length of Parameter aren't the same");
 			return ++result;
 		}else if(current1->next == NULL && current2->next != NULL){
-			yyerror("!!!Length of Parameter aren't the same!!!");
+			yyerror("Length of Parameter aren't the same");
 			return ++result;
 		}else{
 			if(strcmp(current1->val, current2->val) != 0)result++;
@@ -1094,7 +1103,7 @@ char* storeSymbol(symtab *global, symtab *local, char *name){
 			sprintf(result, "istore %d\n", symbol->value);
 		}else if(symbol->changeable == false){
 			// constant
-			yyerror("!!!Trying to modify constant!!!");
+			yyerror("Trying to modify constant");
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
@@ -1103,11 +1112,11 @@ char* storeSymbol(symtab *global, symtab *local, char *name){
 			sprintf(result, "putstatic int %s.%s \n", global->name, symbol->name);
 		}else if(symbol->changeable == false){
 			// constant
-			yyerror("!!!Trying to modify constant!!!");
+			yyerror("Trying to modify constant");
 		}
 	}else{
 		char err[500];
-		sprintf(err, "!!!Symbol \"%s\" Not Found!!!", name);
+		sprintf(err, "Symbol \"%s\" Not Found", name);
 		yyerror(err);
 		str = NULL;
 	}
@@ -1131,7 +1140,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 			}
 		}else if(strcmp(symbol->type, "string") == 0){
 			if(symbol->changeable == 1){
-				yyerror("!!!String Variable is illegle!!!");
+				yyerror("String Variable is illegal");
 			}else{
 				sprintf(result, "ldc \"%s\"\n", symbol->string);
 			}
@@ -1148,13 +1157,13 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 			}
 		}else if(strcmp(symbol->type, "string") == 0){
 			if(symbol->changeable == 1){
-				yyerror("!!!String Variable is illegle!!!");
+				yyerror("String Variable is illegal");
 			}else{
 				sprintf(result, "ldc \"%s\"\n", symbol->string);
 			}
 		}
 	}else{
-		yyerror("!!!Symbol Not Found!!!");
+		yyerror("Symbol Not Found");
 		str = NULL;
 	}
 	return str;

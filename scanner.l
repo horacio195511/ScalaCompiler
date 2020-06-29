@@ -54,8 +54,8 @@ letter		[a-zA-Z0-9]
 [Rr][Ee][Tt][Uu][Rr][Nn]			{tokenKeyword("RETURN"); return(RETURN);}
 [Tt][Oo]							{tokenKeyword("TO"); return(TO);}
 [Rr][Ee][Aa][Dd]					{tokenKeyword("READ"); return(READ);}
-[Tt][Rr][Uu][Ee]					{tokenKeyword("TRUE"); yylval.bval = true; return(TRUE);}
-[Ff][Aa][Ll][Ss][Ee]				{tokenKeyword("FALSE"); yylval.bval = true; return(FALSE);}
+[Tt][Rr][Uu][Ee]					{tokenKeyword("TRUE"); yylval.bval = true; return(BOOL);}
+[Ff][Aa][Ll][Ss][Ee]				{tokenKeyword("FALSE"); yylval.bval = false; return(BOOL);}
 [Vv][Aa][Ll]						{tokenKeyword("VAL"); return(VAL);}
 [Vv][Aa][Rr]						{tokenKeyword("VAR"); return(VAR);}
 \,			{token(","); return(',');}
