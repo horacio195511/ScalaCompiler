@@ -90,6 +90,10 @@ int localRef;
 int Pindex;
 int maxPindex;
 
+// parameter for boolean expression
+int boolindex;
+
+// customize index for if, while, for statement
 listnode *ifindex;
 listnode *whileindex;
 listnode *forindex;
@@ -160,7 +164,13 @@ declaration:
 constant_declaration:
 			VAL IDENTIFIER ':' INT '=' NUMBER			{symtabInsert(localSymtab, $2, $4, false, $6, NULL, NULL);}
 		|	VAL IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
-		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER ':' BOOLEAN '=' BOOL			{
+															if($6 == true){
+																symtabInsert(localSymtab, $2, $4, false, 1, NULL, NULL);
+															}else{
+																symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);
+															}
+														}
 		|	VAL IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, false, 0, $6, NULL);}
 		|	VAL IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, false, 0, NULL, NULL);}
 		|	no_type_constant_declaration
@@ -169,7 +179,13 @@ constant_declaration:
 no_type_constant_declaration:
 			VAL IDENTIFIER '=' NUMBER		{symtabInsert(localSymtab, $2, "int", false, $4, NULL, NULL);}
 		|	VAL IDENTIFIER '=' REAL			{symtabInsert(localSymtab, $2, "float", false, 0, NULL, NULL);}
-		|	VAL IDENTIFIER '=' BOOL			{symtabInsert(localSymtab, $2, "bool", false, 0, NULL, NULL);}
+		|	VAL IDENTIFIER '=' BOOL			{
+												if($4 == true){
+													symtabInsert(localSymtab, $2, "boolean", false, 1, NULL, NULL);
+												}else{
+													symtabInsert(localSymtab, $2, "boolean", false, 0, NULL, NULL);
+												}
+											}
 		|	VAL IDENTIFIER '=' STRING_VAL	{symtabInsert(localSymtab, $2, "string", false, 0, $4, NULL);}
 		;
 
@@ -191,7 +207,26 @@ variable_declaration:
 														}
 													}
 		|	VAR IDENTIFIER ':' FLOAT '=' REAL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
-		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN '=' BOOL			{
+															// the genereated program differed from what scope it's in
+															if(localSymtab == globalSymtab){
+																// global scope
+																symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
+																fprintf(outputFile, "field static int %s\n", $2);
+																if($6 == true){
+																	fprintf(outputFile, "bipush %d\n", 1);
+																}else{
+																	fprintf(outputFile, "bipush %d\n", 0);
+																}
+																fprintf(outputFile, "pustatic int %s.%s\n", globalSymtab->name, $2);
+															}else{
+																// local scope
+																symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
+																symtab *symbol = symtabLookup(localSymtab, $2);
+																fprintf(outputFile, "bipush %d\n", $6);
+																fprintf(outputFile, "istore %d\n", symbol->value);
+															}
+														}
 		|	VAR IDENTIFIER ':' STRING '=' STRING_VAL	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	VAR IDENTIFIER ':' CHAR '=' STRING_VAL		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	no_value_variable_declaration
@@ -213,7 +248,22 @@ no_value_variable_declaration:
 											}
 										}
 		|	VAR IDENTIFIER ':' FLOAT	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
-		|	VAR IDENTIFIER ':' BOOLEAN	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
+		|	VAR IDENTIFIER ':' BOOLEAN	{
+											// the genereated program differed from what scope it's in
+											if(localSymtab == globalSymtab){
+												// global scope
+												symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
+												fprintf(outputFile, "field static int %s\n", $2);
+												fprintf(outputFile, "bipush 0\n");
+												fprintf(outputFile, "pustatic int %s.%s\n", globalSymtab->name, $2);
+											}else{
+												// local scope
+												symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
+												symtab *symbol = symtabLookup(localSymtab, $2);
+												fprintf(outputFile, "bipush %d\n", 0);
+												fprintf(outputFile, "istore %d\n", symbol->value);
+											}
+										}
 		|	VAR IDENTIFIER ':' STRING	{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	VAR IDENTIFIER ':' CHAR		{symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);}
 		|	no_type_variable_declaration
@@ -232,6 +282,29 @@ no_type_variable_declaration:
 													symtabInsert(localSymtab, $2, "int", true, localRef++, NULL, NULL);
 													symtab *symbol = symtabLookup(localSymtab, $2);
 													fprintf(outputFile, "bipush %d\n", $4);
+													fprintf(outputFile, "istore %d\n", symbol->value);
+												}
+											}
+			VAR IDENTIFIER '=' BOOL			{
+												if(localSymtab == globalSymtab){
+													// global scope
+													symtabInsert(localSymtab, $2, "boolean", true, 0, NULL, NULL);
+													fprintf(outputFile, "field static int %s\n", $2);
+													if($4 == true){
+														fprintf(outputFile, "bipush %d\n", 1);
+													}else{
+														fprintf(outputFile, "bipush %d\n", 0);
+													}
+													fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
+												}else{
+													// local scope
+													symtabInsert(localSymtab, $2, "boolean", true, localRef++, NULL, NULL);
+													symtab *symbol = symtabLookup(localSymtab, $2);
+													if($4 == true){
+														fprintf(outputFile, "bipush %d\n", 1);
+													}else{
+														fprintf(outputFile, "bipush %d\n", 0);
+													}
 													fprintf(outputFile, "istore %d\n", symbol->value);
 												}
 											}
@@ -449,7 +522,7 @@ simple_statement:
 		|	RETURN					{fprintf(outputFile, "return\n");}
 		|	RETURN num_expression	{
 										// check if the return type is match with scope's return type
-										
+
 										fprintf(outputFile, "ireturn\n");
 									}
 		;
@@ -498,12 +571,12 @@ conditional_statement:
 ACT:
 	{
 		listnodeInsert(ifindex, NULL, linenum);
-		// goto false
-		fprintf(outputFile, "I%d0\n", listnodeGetLast(ifindex)); //0
-		fprintf(outputFile, "iconst_0\n");
+		// goto false, all of the statement are transfer to here
+		fprintf(outputFile, "ifeq I%d0\n", listnodeGetLast(ifindex)); //0
+		fprintf(outputFile, "iconst_1\n");
 		fprintf(outputFile, "goto I%d1\n", listnodeGetLast(ifindex)); //1
 		fprintf(outputFile, "I%d0:\n", listnodeGetLast(ifindex)); //0
-		fprintf(outputFile, "iconst_1\n");
+		fprintf(outputFile, "iconst_0\n");
 		fprintf(outputFile, "I%d1:\n", listnodeGetLast(ifindex)); //1
 		fprintf(outputFile, "ifeq I%d2\n", listnodeGetLast(ifindex)); //2, goto else
 	}
@@ -591,10 +664,10 @@ ACT1:
 ACT2:
 	{
 		fprintf(outputFile, "L%d1\n", listnodeGetLast(whileindex));
-		fprintf(outputFile, "iconst_0\n");
+		fprintf(outputFile, "iconst_1\n");
 		fprintf(outputFile, "goto L%d2\n", listnodeGetLast(whileindex));
 		fprintf(outputFile, "L%d1:\n", listnodeGetLast(whileindex));
-		fprintf(outputFile, "iconst_1\n");
+		fprintf(outputFile, "iconst_0\n");
 		fprintf(outputFile, "L%d2:\n", listnodeGetLast(whileindex));
 		fprintf(outputFile, "ifeq L%d3\n", listnodeGetLast(whileindex));
 	}
@@ -680,9 +753,17 @@ value:
 	;
 
 bool: 
-		TRUE 
-	|	FALSE 
-	|	IDENTIFIER 
+		TRUE 			{fprintf(outputFile, "iconst_1\n");}
+	|	FALSE 			{fprintf(outputFile, "iconst_0\n");}
+	|	IDENTIFIER 		{
+							symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
+							if(strcmp(symbol->type, "boolean") == 0){
+								char *out = loadSymbol(globalSymtab, localSymtab, $1);
+								fprintf(outputFile, "%s", out);
+							}else{
+								yyerror("Type mismatch");
+							}
+						}
 	;
 
 num_expression:
@@ -720,80 +801,65 @@ num_expression:
 
 boolean_expression:	
 			num_expression '<' num_expression			{
+															// true and false are evaluate with 1 and 0
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "iflt ");
+															fprintf(outputFile, "iflt B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
 														}
 		|	num_expression LESSEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifle ");
+															fprintf(outputFile, "ifle B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+
 														}
 		|	num_expression LARGEEQUAL num_expression	{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifge ");
+															fprintf(outputFile, "ifge B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+
 														}
 		|	num_expression '>' num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifgt ");
+															fprintf(outputFile, "ifgt B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+
 														}
 		|	num_expression EQUAL num_expression			{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifeq ");
+															fprintf(outputFile, "ifeq B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+
 														}
 		|	num_expression NOTEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
-															fprintf(outputFile, "ifnq ");
+															fprintf(outputFile, "ifnq B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+
 														}
-		|	boolean_expression	
-			{
-				int index = linenum;
-				fprintf(outputFile, "A%d0\n", index);
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "goto A%d1\n", index);
-				fprintf(outputFile, "A%d0:\n", index);
-				fprintf(outputFile, "iconst_0\n");
-				fprintf(outputFile, "A%d1:\n", index);
-			}
-			AND boolean_expression
-			{
-				int index = linenum;
-				index++;
-				fprintf(outputFile, "A%d0\n", index);
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "goto A%d1\n", index);
-				fprintf(outputFile, "A%d0:\n", index);
-				fprintf(outputFile, "iconst_0\n");
-				fprintf(outputFile, "A%d1:\n", index);
-				fprintf(outputFile, "ior\n");
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "isub\n");
-				fprintf(outputFile, "ifeq ");
-			}
-		|	boolean_expression
-			{
-				int index = linenum;
-				fprintf(outputFile, "O%d0\n", index);
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "goto O%d1\n", index);
-				fprintf(outputFile, "O%d0:\n", index);
-				fprintf(outputFile, "iconst_0\n");
-				fprintf(outputFile, "O%d1:\n", index);
-			}
-			OR boolean_expression
-			{
-				int index = linenum;
-				index++;
-				fprintf(outputFile, "O%d0\n", index);
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "goto A%d1\n", index);
-				fprintf(outputFile, "O%d0:\n", index);
-				fprintf(outputFile, "iconst_0\n");
-				fprintf(outputFile, "O%d1:\n", index);
-				fprintf(outputFile, "iand\n");
-				fprintf(outputFile, "iconst_1\n");
-				fprintf(outputFile, "isub\n");
-				fprintf(outputFile, "ifeq ");
-			}
-		|	'!' boolean_expression %prec '!'
+		|	boolean_expression AND boolean_expression	{
+															fprintf(outputFile, "iand\n");
+														}
+		|	boolean_expression OR boolean_expression	{
+															fprintf(outputFile, "ior\n");
+														}
+		|	'!' boolean_expression %prec '!'			{
+															fprintf(outputFile, "ifeq B%d\n", ++boolindex);
+															fprintf(outputFile, "iconst_1\n");
+															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "iconst_0\n");
+														}
 		|	bool
 		;
 %%
@@ -838,6 +904,8 @@ void main(int argc, char *argv[])
 
 		Pindex = 0;
 		maxPindex = 0;
+
+		boolindex = 0;
 	}
     
     /* perform parsing */
@@ -1130,7 +1198,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 	symtab *symbol;
 	if((symbol = symtabLookup(local, name)) != NULL){
 		// local
-		if(strcmp(symbol->type, "int") == 0){
+		if(strcmp(symbol->type, "int") == 0 || strcmp(symbol->type, "boolean") == 0){
 			if(symbol->changeable == 1){
 				// variable
 				sprintf(result, "iload %d\n", symbol->value);
@@ -1147,7 +1215,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 		}
 	}else if((symbol = symtabLookup(global, name)) != NULL){
 		// global
-		if(strcmp(symbol->type, "int") == 0){
+		if(strcmp(symbol->type, "int") == 0 || strcmp(symbol->type, "int") == 0){
 			if(symbol->changeable == 1){
 				// variable
 				sprintf(result, "getstatic %s %s.%s\n", symbol->type, global->name, symbol->name);
