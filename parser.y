@@ -179,13 +179,13 @@ variable_declaration:
 															// global scope
 															symtabInsert(localSymtab, $2, $4, true, 0, NULL, NULL);
 															fprintf(outputFile, "field static int %s\n", $2);
-															fprintf(outputFile, "sipush %d\n", $6);
+															fprintf(outputFile, "bipush %d\n", $6);
 															fprintf(outputFile, "pustatic int %s.%s\n", globalSymtab->name, $2);
 														}else{
 															// local scope
 															symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
 															symtab *symbol = symtabLookup(localSymtab, $2);
-															fprintf(outputFile, "sipush %d\n", $6);
+															fprintf(outputFile, "bipush %d\n", $6);
 															fprintf(outputFile, "istore %d\n", symbol->value);
 														}
 													}
@@ -207,7 +207,7 @@ no_value_variable_declaration:
 												// local scope
 												symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
 												symtab *symbol = symtabLookup(localSymtab, $2);
-												fprintf(outputFile, "sipush %d\n", 0);
+												fprintf(outputFile, "bipush %d\n", 0);
 												fprintf(outputFile, "istore %d\n", symbol->value);
 											}
 										}
@@ -224,13 +224,13 @@ no_type_variable_declaration:
 													// global scope
 													symtabInsert(localSymtab, $2, "int", true, 0, NULL, NULL);
 													fprintf(outputFile, "field static int %s\n", $2);
-													// fprintf(outputFile, "sipush %d\n", $4);
+													// fprintf(outputFile, "bipush %d\n", $4);
 													// fprintf(outputFile, "putstatic int %s.%s\n", globalSymtab->name, $2);
 												}else{
 													// local scope
 													symtabInsert(localSymtab, $2, "int", true, localRef++, NULL, NULL);
 													symtab *symbol = symtabLookup(localSymtab, $2);
-													fprintf(outputFile, "sipush %d\n", $4);
+													fprintf(outputFile, "bipush %d\n", $4);
 													fprintf(outputFile, "istore %d\n", symbol->value);
 												}
 											}
@@ -244,10 +244,10 @@ no_type_value_variable_declaration:
 array_declaration:	
 			VAR IDENTIFIER ':' type '[' NUMBER ']'		{
 															// symbol table operation
-															symtabInsert(localSymtab, $2, $4, true, localRef++, NULL, NULL);
+															symtabInsert(localSymtab, $2, $4, true, localRef++, "array", NULL);
 															// code generation
 															symtab *symbol = scopeLookup(globalSymtab, localSymtab, $2);
-															fprintf(outputFile, "sipush $6\n");
+															fprintf(outputFile, "bipush %d\n", $6);
 															fprintf(outputFile, "newarray int\n");
 															fprintf(outputFile, "astore %d\n", symbol->value);
 														}
@@ -322,7 +322,7 @@ type_exp:
 		|	':' type {$$=$2;}
 		;
 
-method_block:	zmvcd zms;
+method_block: zmvcd zms;
 
 type:	
 		FLOAT
@@ -343,26 +343,29 @@ simple_statement:
 												// value assignment
 												char *out = storeSymbol(globalSymtab, localSymtab, symbol->name);
 												fprintf(outputFile, "%s", out);
-												Trace("Reduce to identifier ");
+												Trace("Reduce to identifier evaluation\n");
 											}
-		|	IDENTIFIER '[' num_expression ']' '=' 
+		|	IDENTIFIER '[' 
 			{
 				// type checking
 				symtab *symbol = scopeLookup(globalSymtab, localSymtab, $1);
-				if(strcmp(symbol->string, "array") == 0){
-					// check the length of index is in bound
-					// get the array lenght
-					fprintf(outputFile, "aload %d\n", symbol->value);
-					
-					// load array object
-					fprintf(outputFile, "aload %d\n", symbol->value);
-					fprintf(outputFile, "sipush $3\n");
+				if(symbol != NULL){
+					if(strcmp(symbol->string, "array") == 0){
+						// check the length of index is in bound
+						// load array object
+						fprintf(outputFile, "aload %d\n", symbol->value);
+					}else{
+						yyerror("!!!Identifier is not an array!!!");
+					}
+				}else{
+					yyerror("!!!Symbol not found!!!");
 				}
+				
 			}
-			num_expression
+			num_expression ']' '=' num_expression
 			{
 				// store the value to array
-				fprintf(outputFile, "aistore\n");
+				fprintf(outputFile, "iastore\n");
 			}
 		|	PRINT 
 			{
@@ -409,7 +412,7 @@ simple_statement:
 										fprintf(outputFile, "istore 14\n");
 										// see if it is equal to 10
 										fprintf(outputFile, "iload 14\n");
-										fprintf(outputFile, "sipush 10\n");
+										fprintf(outputFile, "bipush 10\n");
 										fprintf(outputFile, "isub\n");
 										fprintf(outputFile, "ifeq P%d\n", Pindex++); //1
 										fprintf(outputFile, "iconst_1\n");
@@ -421,13 +424,13 @@ simple_statement:
 										maxPindex = max(maxPindex, Pindex);
 										// no, add to the identifier
 										// first multiply the number in local variable by 10
-										fprintf(outputFile, "sipush 10\n");
+										fprintf(outputFile, "bipush 10\n");
 										char *out = loadSymbol(globalSymtab, localSymtab, $2);
 										fprintf(outputFile, "%s", out);
 										fprintf(outputFile, "imul\n");
 										// convert from ascii to int number
 										fprintf(outputFile, "iload 14\n");
-										fprintf(outputFile, "sipush 48\n");
+										fprintf(outputFile, "bipush 48\n");
 										fprintf(outputFile, "isub\n");
 										fprintf(outputFile, "iadd\n");
 										out = storeSymbol(globalSymtab, localSymtab, $2);
@@ -520,7 +523,7 @@ loop_statement:
 				// conditional area
 				listnodeInsert(forindex, NULL, linenum);
 				// store the parameter to id
-				fprintf(outputFile, "sipush %d\n", $6);
+				fprintf(outputFile, "bipush %d\n", $6);
 				fprintf(outputFile, "istore %d\n", symbol->value);
 				fprintf(outputFile, "F%d0:\n", listnodeGetLast(forindex));
 				// increment or decrement the input ID
@@ -529,7 +532,7 @@ loop_statement:
 					fprintf(outputFile, "iinc %d %d\n", symbol->value, 1);
 					// conditional check
 					fprintf(outputFile, "iload %d\n", symbol->value);
-					fprintf(outputFile, "sipush %d\n", $8);
+					fprintf(outputFile, "bipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_1\n");
@@ -541,12 +544,12 @@ loop_statement:
 				}else if($6 > $8){
 					// decrement
 					fprintf(outputFile, "iload %d\n", symbol->value);
-					fprintf(outputFile, "sipush 1\n");
+					fprintf(outputFile, "bipush 1\n");
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "istore %d\n", symbol->value);
 					// conditional check
 					fprintf(outputFile, "iload %d\n", symbol->value);
-					fprintf(outputFile, "sipush %d\n", $8);
+					fprintf(outputFile, "bipush %d\n", $8);
 					fprintf(outputFile, "isub\n");
 					fprintf(outputFile, "ifeq F%d1\n", listnodeGetLast(forindex));
 					fprintf(outputFile, "iconst_1\n");
@@ -638,7 +641,7 @@ parameter_expression:
 
 value: 
 		NUMBER 					{
-									fprintf(outputFile, "sipush %d\n", $1);
+									fprintf(outputFile, "bipush %d\n", $1);
 									$$ = "int";
 								}
 	| 	REAL					{$$ = "float";}
@@ -1124,7 +1127,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 				sprintf(result, "iload %d\n", symbol->value);
 			}else{
 				// constant: looking in symtab
-				sprintf(result, "sipush %d\n", symbol->value);
+				sprintf(result, "bipush %d\n", symbol->value);
 			}
 		}else if(strcmp(symbol->type, "string") == 0){
 			if(symbol->changeable == 1){
@@ -1141,7 +1144,7 @@ char* loadSymbol(symtab *global, symtab *local, char *name){
 				sprintf(result, "getstatic %s %s.%s\n", symbol->type, global->name, symbol->name);
 			}else{
 				// constant: looking in symtab, directly return the value
-				sprintf(result, "sipush %d\n", symbol->value);
+				sprintf(result, "bipush %d\n", symbol->value);
 			}
 		}else if(strcmp(symbol->type, "string") == 0){
 			if(symbol->changeable == 1){

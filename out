@@ -1,0 +1,3288 @@
+2: 
+3:  * class: test1, two functions
+3:  */
+4: 
+<OBJECT>
+<id: "test1">
+<'{'>
+5: object test1{
+6:     //empty string
+<VAL>
+<id: "str1">
+<':'>
+<STRING>
+<'='>
+<string: "">
+Reduce to constant declaration
+7:     val str1:string=""
+<DEF>
+<id: "add">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+8:     def add(a:int, b:int):int{
+<VAR>
+<id: "result">
+<':'>
+<INT>
+9:         var result:int
+<id: "result">
+<'='>
+<id: "a">
+<'+'>
+<id: "b">
+10:         result = a+b
+<RETURN>
+Reduce to identifier <id: "result">
+11:         return result
+<'}'>
+Reduce to method declaration
+12:     }
+<DEF>
+<id: "mul">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+13:     def mul(a:int, b:int):int{
+<VAR>
+<id: "result">
+<':'>
+<INT>
+14:         var result:int
+<PRINTLN>
+<'('>
+<id: "a">
+<'*'>
+<id: "b">
+<')'>
+15:         println (a*b)
+<id: "result">
+<'='>
+<id: "a">
+<'+'>
+<id: "b">
+16:         result = a+b
+<RETURN>
+Reduce to identifier <id: "result">
+17:         return result
+<'}'>
+Reduce to method declaration
+18:     }
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+19:     def main(){
+<VAR>
+<id: "pi">
+<':'>
+<INT>
+<'='>
+<INT:5>
+20:         var pi:int = 5
+<VAR>
+<id: "c">
+<':'>
+<INT>
+21:         var c:int
+<id: "c">
+<'='>
+<id: "mul">
+<'('>
+<INT:5>
+<','>
+<INT:5>
+<')'>
+22:         c= mul(5,5)
+<id: "pi">
+Reduce to identifier <'='>
+<id: "add">
+<'('>
+<INT:5>
+<','>
+<INT:3>
+<')'>
+23:         pi = add(5, 3)
+<PRINTLN>
+Reduce to identifier <'('>
+<id: "c">
+<')'>
+24:         println(c)
+<PRINTLN>
+<'('>
+<id: "pi">
+<')'>
+25:         println(pi)
+<'}'>
+Reduce to method declaration
+26:     }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test1
+<test1 : (null) = 0>
+<str1 : string = 0>
+<add : int = 0>
+<mul : int = 0>
+<main : void = 0>
+add
+<add : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<result : int = 2>
+mul
+<mul : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<result : int = 2>
+main
+<main : (null) = 0>
+<pi : int = 0>
+<c : int = 1>
+2: 
+3:  * class: test10, array utility
+4:  * a fibonacci based on dynamic programming
+4:  */
+5: 
+<OBJECT>
+<id: "test10">
+<'{'>
+6: object test10{
+<DEF>
+<id: "fib">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+7:     def fib(a:int):int{
+<VAR>
+<id: "b">
+<':'>
+<INT>
+8:         var b:int
+<VAR>
+<id: "i">
+<':'>
+<INT>
+<'='>
+<INT:2>
+9:         var i:int = 2
+<VAR>
+<id: "temp">
+<':'>
+<INT>
+<'='>
+<INT:1>
+10:         var temp:int= 1
+<id: "b">
+<'='>
+<id: "a">
+11:         b = a
+13:          although this algorithm is capable of fast
+14:          * fibonacci sequence, but we won't use that much.
+14:          */
+<VAR>
+Reduce to identifier 2: 
+3:  *  test2: Example with Functions
+3:  */
+4: 
+<OBJECT>
+<id: "test2">
+<'{'>
+5:  object test2{
+6:      // constants
+<VAL>
+<id: "a">
+<'='>
+<INT:5>
+Reduce to constant declaration
+7:      val a = 5
+8: 
+9:      // variables
+<VAR>
+<id: "c">
+<':'>
+<INT>
+10:      var c:int
+11: 
+12:      // function declaration
+<DEF>
+Reduce to variable declaration
+<id: "add">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+13:      def add(a:int, b:int):int{
+<RETURN>
+<id: "a">
+<'+'>
+<id: "b">
+14:          return a+b
+<'}'>
+Reduce to method declaration
+15:      }
+16: 
+17:      //main statement
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+18:      def main(){
+<id: "c">
+<'='>
+<id: "add">
+<'('>
+<id: "a">
+<','>
+<INT:10>
+<')'>
+19:          c = add(a, 10)
+<IF>
+Reduce to identifier <'('>
+<id: "c">
+<'>'>
+<INT:10>
+<')'>
+20:          if(c>10)
+<PRINT>
+<'('>
+<'-'>
+<id: "c">
+<')'>
+21:             print(-c)
+<ELSE>
+22:         else
+<PRINT>
+<'('>
+<id: "c">
+<')'>
+Reduce to conditional statement
+23:             print(c)
+<PRINTLN>
+<'('>
+<string: "Hello World">
+<')'>
+24:         println("Hello World")
+<'}'>
+Reduce to method declaration
+25:      }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test2
+<test2 : (null) = 0>
+<a : int = 5>
+<c : int = 0>
+<add : int = 0>
+<main : void = 0>
+add
+<add : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+main
+<main : (null) = 0>
+2: 
+3:  * class: test3 example code given by course
+3:  */
+4: 
+<OBJECT>
+<id: "test3">
+<'{'>
+5: object test3{
+<VAL>
+<id: "pi">
+<':'>
+<INT>
+<'='>
+<INT:3>
+Reduce to constant declaration
+6:     val pi:int = 3
+<VAR>
+<id: "a">
+<'='>
+<INT:3>
+Reduce to variable declaration
+7:     var a = 3
+<DEF>
+<id: "power">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+8:     def power(a:int, b:int):int{
+<VAR>
+<id: "i">
+<'='>
+<INT:0>
+9:         var i=0
+<VAR>
+<id: "j">
+<'='>
+<INT:1>
+10:         var j=1
+<id: "i">
+<'='>
+<id: "a">
+11:         i = a
+<WHILE>
+Reduce to identifier <'('>
+<id: "j">
+<'<'>
+<id: "b">
+<')'>
+<'{'>
+12:         while(j<b){
+<id: "i">
+<'='>
+<id: "i">
+<'*'>
+<id: "a">
+13:             i=i*a
+<id: "j">
+Reduce to identifier <'='>
+<id: "j">
+<'+'>
+<INT:1>
+14:             j=j+1
+<'}'>
+Reduce to identifier 15:         }
+<RETURN>
+<id: "i">
+16:         return i
+<'}'>
+Reduce to method declaration
+17:     }
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+18:     def main(){
+<VAR>
+<id: "a">
+<':'>
+<INT>
+<'='>
+<INT:0>
+19:         var a:int = 0
+<id: "a">
+<'='>
+<id: "power">
+<'('>
+<INT:2>
+<','>
+<INT:3>
+<')'>
+20:         a=power(2,3)
+<PRINTLN>
+Reduce to identifier <'('>
+<id: "a">
+<')'>
+21:         println(a)
+<'}'>
+Reduce to method declaration
+22:     }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test3
+<test3 : (null) = 0>
+<pi : int = 3>
+<a : int = 0>
+<power : int = 0>
+<main : void = 0>
+power
+<power : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<i : int = 2>
+<j : int = 3>
+main
+<main : (null) = 0>
+<a : int = 0>
+2: 
+3:  * class: test4, nested if...else... statement and while loop
+3:  */
+4: 
+<OBJECT>
+<id: "test4">
+<'{'>
+5: object test4{
+<VAL>
+<id: "real">
+<':'>
+<INT>
+<'='>
+<INT:10>
+Reduce to constant declaration
+6:     val real:int = 10
+<DEF>
+<id: "fib">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+7:     def fib(a:int):int{
+<VAR>
+<id: "i0">
+<'='>
+<INT:1>
+8:         var i0=1
+<VAR>
+<id: "i1">
+<'='>
+<INT:1>
+9:         var i1=1
+<VAR>
+<id: "i2">
+<'='>
+<INT:2>
+10:         var i2=2
+<VAR>
+<id: "temp">
+<'='>
+<INT:0>
+11:         var temp=0
+<VAR>
+<id: "j">
+<'='>
+<INT:2>
+12:         var j=2
+<IF>
+<'('>
+<id: "a">
+<'=='>
+<INT:0>
+<')'>
+<'{'>
+13:         if(a == 0){
+<id: "temp">
+<'='>
+<id: "i0">
+14:             temp = i0
+<'}'>
+Reduce to identifier <ELSE>
+<'{'>
+15:         }else{
+<IF>
+<'('>
+<id: "a">
+<'=='>
+<INT:1>
+<')'>
+<'{'>
+16:             if(a == 1){
+<id: "temp">
+<'='>
+<id: "i1">
+17:                 temp = i1
+<'}'>
+Reduce to identifier <ELSE>
+<'{'>
+18:             }else{
+<IF>
+<'('>
+<id: "a">
+<'=='>
+<INT:2>
+<')'>
+<'{'>
+19:                 if(a == 2){
+<id: "temp">
+<'='>
+<id: "i2">
+20:                     temp = i2
+<'}'>
+Reduce to identifier <ELSE>
+<'{'>
+21:                 }else{
+<WHILE>
+<'('>
+<id: "j">
+<'<'>
+<id: "a">
+<')'>
+<'{'>
+22:                     while(j < a){
+<id: "i0">
+<'='>
+<id: "i1">
+23:                         i0 = i1
+<id: "i1">
+Reduce to identifier <'='>
+<id: "i2">
+24:                         i1 = i2
+<id: "i2">
+Reduce to identifier <'='>
+<id: "i1">
+<'+'>
+<id: "i0">
+25:                         i2 = i1+i0
+<id: "j">
+Reduce to identifier <'='>
+<id: "j">
+<'+'>
+<INT:1>
+26:                         j=j+1
+<id: "temp">
+Reduce to identifier <'='>
+<id: "i2">
+27:                         temp = i2
+<'}'>
+Reduce to identifier 28:                     }
+<'}'>
+Reduce to conditional statement
+29:                 }
+<'}'>
+Reduce to conditional statement
+30:             }
+<'}'>
+Reduce to conditional statement
+31:         }
+<RETURN>
+<id: "temp">
+32:         return temp
+<'}'>
+Reduce to method declaration
+33:     }
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+34:     def main(){
+<VAR>
+<id: "c">
+<':'>
+<INT>
+35:         var c:int
+<VAR>
+<id: "d">
+<':'>
+<INT>
+36:         var d:int
+<PRINT>
+<'('>
+<string: "fib of ">
+<')'>
+37:         print("fib of ")
+<READ>
+<id: "d">
+38:         read d
+<id: "c">
+<'='>
+<id: "fib">
+<'('>
+<id: "d">
+<')'>
+39:         c = fib(d)
+<PRINT>
+Reduce to identifier <'('>
+<string: " = ">
+<')'>
+40:         print(" = ")
+<PRINTLN>
+<'('>
+<id: "c">
+<')'>
+41:         println(c)
+<'}'>
+Reduce to method declaration
+42:     }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test4
+<test4 : (null) = 0>
+<real : int = 10>
+<fib : int = 0>
+<main : void = 0>
+fib
+<fib : (null) = 0>
+<a : int = 0>
+<i0 : int = 1>
+<i1 : int = 2>
+<i2 : int = 3>
+<temp : int = 4>
+<j : int = 5>
+main
+<main : (null) = 0>
+<c : int = 0>
+<d : int = 1>
+2: 
+3:  * class: test5, nested while loop
+3:  */
+4: 
+<OBJECT>
+<id: "test5">
+<'{'>
+5:  object test5{
+<DEF>
+<id: "onewhile">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+6:      def onewhile(a:int):int{
+<VAR>
+<id: "j">
+<':'>
+<INT>
+<'='>
+<INT:0>
+7:          var j:int = 0
+<VAR>
+<id: "temp">
+<':'>
+<INT>
+<'='>
+<INT:0>
+8:          var temp:int = 0
+<WHILE>
+<'('>
+<id: "j">
+<'<='>
+<id: "a">
+<')'>
+<'{'>
+9:          while(j <= a){
+<id: "temp">
+<'='>
+<id: "temp">
+<'+'>
+<id: "j">
+10:              temp = temp + j
+<id: "j">
+Reduce to identifier <'='>
+<id: "j">
+<'+'>
+<INT:1>
+11:              j = j+1
+<'}'>
+Reduce to identifier 12:          }
+<RETURN>
+<id: "temp">
+13:          return temp
+<'}'>
+Reduce to method declaration
+14:      }
+<DEF>
+<id: "twowhile">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+15:      def twowhile(a:int, b:int):int{
+<VAR>
+<id: "i">
+<':'>
+<INT>
+<'='>
+<INT:0>
+16:          var i:int = 0
+<VAR>
+<id: "j">
+<':'>
+<INT>
+<'='>
+<INT:0>
+17:          var j:int = 0
+<VAR>
+<id: "temp">
+<'='>
+<INT:0>
+18:          var temp = 0
+<WHILE>
+<'('>
+<id: "i">
+<'<='>
+<id: "a">
+<')'>
+<'{'>
+19:          while(i <= a){
+<WHILE>
+<'('>
+<id: "j">
+<'<='>
+<id: "b">
+<')'>
+<'{'>
+20:              while(j <= b){
+<id: "temp">
+<'='>
+<id: "temp">
+<'+'>
+<id: "j">
+21:                  temp = temp + j
+<id: "j">
+Reduce to identifier <'='>
+<id: "j">
+<'+'>
+<INT:1>
+22:                  j = j+1
+<'}'>
+Reduce to identifier 23:              }
+<id: "j">
+<'='>
+<INT:0>
+24:              j=0
+<id: "i">
+Reduce to identifier <'='>
+<id: "i">
+<'+'>
+<INT:1>
+25:              i = i+1
+<'}'>
+Reduce to identifier 26:          }
+<RETURN>
+<id: "temp">
+27:          return temp
+<'}'>
+Reduce to method declaration
+28:      }
+<DEF>
+<id: "threewhile">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<','>
+<id: "c">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+29:      def threewhile(a:int, b:int, c:int):int{
+<VAR>
+<id: "i">
+<':'>
+<INT>
+<'='>
+<INT:0>
+30:          var i:int = 0
+<VAR>
+<id: "j">
+<':'>
+<INT>
+<'='>
+<INT:0>
+31:          var j:int = 0
+<VAR>
+<id: "k">
+<':'>
+<INT>
+<'='>
+<INT:0>
+32:          var k:int = 0
+<VAR>
+<id: "temp">
+<':'>
+<INT>
+<'='>
+<INT:0>
+33:          var temp:int = 0
+<WHILE>
+<'('>
+<id: "i">
+<'<='>
+<id: "a">
+<')'>
+<'{'>
+34:          while(i <= a){
+<WHILE>
+<'('>
+<id: "j">
+<'<='>
+<id: "b">
+<')'>
+<'{'>
+35:              while(j <= b){
+<WHILE>
+<'('>
+<id: "k">
+<'<='>
+<id: "c">
+<')'>
+<'{'>
+36:                  while(k <= c){
+<id: "temp">
+<'='>
+<id: "temp">
+<'+'>
+<id: "k">
+37:                      temp = temp + k
+<id: "k">
+Reduce to identifier <'='>
+<id: "k">
+<'+'>
+<INT:1>
+38:                      k = k+1
+<'}'>
+Reduce to identifier 39:                  }
+<id: "j">
+<'='>
+<id: "j">
+<'+'>
+<INT:1>
+40:                  j = j+1
+<id: "k">
+Reduce to identifier <'='>
+<INT:0>
+41:                  k=0
+<'}'>
+Reduce to identifier 42:              }
+<id: "i">
+<'='>
+<id: "i">
+<'+'>
+<INT:1>
+43:              i = i+1
+<id: "j">
+Reduce to identifier <'='>
+<INT:0>
+44:              j=0
+<'}'>
+Reduce to identifier 45:          }
+<RETURN>
+<id: "temp">
+46:          return temp
+<'}'>
+Reduce to method declaration
+47:      }
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+48:      def main(){
+<VAR>
+<id: "a">
+<':'>
+<INT>
+49:          var a:int
+<VAR>
+<id: "b">
+<':'>
+<INT>
+50:          var b:int
+<VAR>
+<id: "c">
+<':'>
+<INT>
+51:          var c:int
+<id: "a">
+<'='>
+<id: "onewhile">
+<'('>
+<INT:10>
+<')'>
+52:          a = onewhile(10)
+<id: "b">
+Reduce to identifier <'='>
+<id: "twowhile">
+<'('>
+<INT:10>
+<','>
+<INT:10>
+<')'>
+53:          b = twowhile(10, 10)
+<id: "c">
+Reduce to identifier <'='>
+<id: "threewhile">
+<'('>
+<INT:10>
+<','>
+<INT:10>
+<','>
+<INT:10>
+<')'>
+54:          c = threewhile(10, 10, 10)
+<PRINTLN>
+Reduce to identifier <'('>
+<id: "a">
+<')'>
+55:          println(a)
+<PRINTLN>
+<'('>
+<id: "b">
+<')'>
+56:          println(b)
+<PRINTLN>
+<'('>
+<id: "c">
+<')'>
+57:          println(c)
+<'}'>
+Reduce to method declaration
+58:      }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test5
+<test5 : (null) = 0>
+<onewhile : int = 0>
+<twowhile : int = 0>
+<threewhile : int = 0>
+<main : void = 0>
+onewhile
+<onewhile : (null) = 0>
+<a : int = 0>
+<j : int = 1>
+<temp : int = 2>
+twowhile
+<twowhile : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<i : int = 2>
+<j : int = 3>
+<temp : int = 4>
+threewhile
+<threewhile : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+<i : int = 3>
+<j : int = 4>
+<k : int = 5>
+<temp : int = 6>
+main
+<main : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+2: 
+3:  * class: test6, nested for loop
+3:  */
+4: 
+<OBJECT>
+<id: "test6">
+<'{'>
+5:  object test6{
+<DEF>
+<id: "onefor">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+6:      def onefor(a:int):int{
+<VAR>
+<id: "b">
+<':'>
+<INT>
+<'='>
+<INT:0>
+7:          var b:int = 0
+<VAR>
+<id: "c">
+<':'>
+<INT>
+<'='>
+<INT:0>
+8:          var c:int = 0
+<FOR>
+<'('>
+<id: "b">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+9:          for(b <- 5 to 10){
+<id: "c">
+<'='>
+<id: "c">
+<'+'>
+<id: "a">
+10:              c = c+a
+<'}'>
+Reduce to identifier Reduce to loop statement
+11:          }
+<RETURN>
+<id: "c">
+12:          return c
+<'}'>
+Reduce to method declaration
+13:      }
+14: 
+<DEF>
+<id: "twofor">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+15:      def twofor(a:int, b:int):int{
+<VAR>
+<id: "d">
+<':'>
+<INT>
+16:          var d:int
+<VAR>
+<id: "e">
+<':'>
+<INT>
+17:          var e:int
+<VAR>
+<id: "f">
+<':'>
+<INT>
+18:          var f:int
+<FOR>
+<'('>
+<id: "d">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+19:          for(d <- 5 to 10){
+<FOR>
+<'('>
+<id: "e">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+20:              for(e <- 5 to 10){
+<id: "f">
+<'='>
+<id: "f">
+<'+'>
+<id: "a">
+21:                  f = f+a
+<'}'>
+Reduce to identifier Reduce to loop statement
+22:              }
+<id: "f">
+<'='>
+<id: "f">
+<'+'>
+<id: "b">
+23:              f = f+b
+<'}'>
+Reduce to identifier Reduce to loop statement
+24:          }
+<RETURN>
+<id: "f">
+25:          return f
+<'}'>
+Reduce to method declaration
+26:      }
+27: 
+<DEF>
+<id: "threefor">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<','>
+<id: "c">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+28:      def threefor(a:int, b:int, c:int):int{
+<VAR>
+<id: "d">
+<':'>
+<INT>
+29:          var d:int
+<VAR>
+<id: "e">
+<':'>
+<INT>
+30:          var e:int
+<VAR>
+<id: "f">
+<':'>
+<INT>
+31:          var f:int
+<VAR>
+<id: "g">
+<':'>
+<INT>
+32:          var g:int
+<FOR>
+<'('>
+<id: "d">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+33:          for(d <- 5 to 10){
+<FOR>
+<'('>
+<id: "e">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+34:              for(e <- 5 to 10){
+<FOR>
+<'('>
+<id: "f">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+35:                  for(f <- 5 to 10){
+<id: "g">
+<'='>
+<id: "g">
+<'+'>
+<id: "a">
+36:                      g = g+a
+<'}'>
+Reduce to identifier Reduce to loop statement
+37:                  }
+<id: "g">
+<'='>
+<id: "g">
+<'+'>
+<id: "b">
+38:                  g = g+b
+<'}'>
+Reduce to identifier Reduce to loop statement
+39:              }
+<id: "g">
+<'='>
+<id: "g">
+<'+'>
+<id: "c">
+40:              g = g+c
+<'}'>
+Reduce to identifier Reduce to loop statement
+41:          }
+<RETURN>
+<id: "g">
+42:          return g
+<'}'>
+Reduce to method declaration
+43:      }
+44: 
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+45:      def main(){
+<VAR>
+<id: "a">
+<':'>
+<INT>
+<'='>
+<INT:3>
+46:          var a: int = 3
+<VAR>
+<id: "b">
+<':'>
+<INT>
+<'='>
+<INT:2>
+47:          var b: int = 2
+<VAR>
+<id: "c">
+<':'>
+<INT>
+<'='>
+<INT:5>
+48:          var c: int = 5
+<id: "a">
+<'='>
+<id: "onefor">
+<'('>
+<id: "a">
+<')'>
+49:          a = onefor(a)
+<id: "b">
+Reduce to identifier <'='>
+<id: "twofor">
+<'('>
+<id: "a">
+<','>
+<id: "b">
+<')'>
+50:          b = twofor(a, b)
+<id: "c">
+Reduce to identifier <'='>
+<id: "threefor">
+<'('>
+<id: "a">
+<','>
+<id: "b">
+<','>
+<id: "c">
+<')'>
+51:          c = threefor(a, b, c)
+<PRINT>
+Reduce to identifier <'('>
+<string: "a = ">
+<')'>
+52:          print("a = ")
+<PRINTLN>
+<'('>
+<id: "a">
+<')'>
+53:          println(a)
+<PRINT>
+<'('>
+<string: "b = ">
+<')'>
+54:          print("b = ")
+<PRINTLN>
+<'('>
+<id: "b">
+<')'>
+55:          println(b)
+<PRINT>
+<'('>
+<string: "c = ">
+<')'>
+56:          print("c = ")
+<PRINTLN>
+<'('>
+<id: "c">
+<')'>
+57:          println(c)
+<'}'>
+Reduce to method declaration
+58:      }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test6
+<test6 : (null) = 0>
+<onefor : int = 0>
+<twofor : int = 0>
+<threefor : int = 0>
+<main : void = 0>
+onefor
+<onefor : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+twofor
+<twofor : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<d : int = 2>
+<e : int = 3>
+<f : int = 4>
+threefor
+<threefor : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+<d : int = 3>
+<e : int = 4>
+<f : int = 5>
+<g : int = 6>
+main
+<main : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+2: 
+3:  * conditional, while, for all together
+3:  */
+4: 
+<OBJECT>
+<id: "test7">
+<'{'>
+5: object test7{
+<DEF>
+<id: "twoinone">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+6:     def twoinone(a:int, b:int):int{
+<VAR>
+<id: "c">
+<':'>
+<INT>
+7:         var c:int
+<VAR>
+<id: "d">
+<':'>
+<INT>
+<'='>
+<INT:0>
+8:         var d:int=0
+<FOR>
+<'('>
+<id: "c">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+9:         for(c <- 5 to 10){
+<WHILE>
+<'('>
+<id: "c">
+<'*'>
+<id: "b">
+<'<'>
+<INT:20>
+<')'>
+<'{'>
+10:             while(c*b < 20){
+<id: "d">
+<'='>
+<id: "d">
+<'+'>
+<id: "a">
+11:                 d = d+a
+<'}'>
+Reduce to identifier 12:             }
+<'}'>
+Reduce to loop statement
+13:         }
+<RETURN>
+<id: "d">
+14:         return d
+<'}'>
+Reduce to method declaration
+15:     }
+16:     
+<DEF>
+<id: "threeinone">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+17:     def threeinone(a:int, b:int):int{
+<VAR>
+<id: "c">
+<':'>
+<INT>
+18:         var c:int
+<VAR>
+<id: "d">
+<':'>
+<INT>
+<'='>
+<INT:1>
+19:         var d:int=1
+<FOR>
+<'('>
+<id: "c">
+<'<'>
+<'-'>
+<INT:5>
+<TO>
+<INT:10>
+<')'>
+<'{'>
+20:         for(c <- 5 to 10){
+<WHILE>
+<'('>
+<id: "c">
+<'*'>
+<id: "b">
+<'<'>
+<INT:20>
+<')'>
+<'{'>
+21:             while(c*b < 20){
+<IF>
+<'('>
+<id: "c">
+<'*'>
+<id: "d">
+<'<'>
+<INT:15>
+<')'>
+<'{'>
+22:                 if(c*d <15){
+<id: "d">
+<'='>
+<id: "a">
+<'+'>
+<id: "d">
+23:                     d = a+d
+<'}'>
+Reduce to identifier <ELSE>
+<'{'>
+24:                 }else{
+<id: "d">
+<'='>
+<id: "b">
+<'+'>
+<id: "d">
+25:                     d = b+d
+<'}'>
+Reduce to identifier Reduce to conditional statement
+26:                 }
+<'}'>
+27:             }
+<'}'>
+Reduce to loop statement
+28:         }
+<RETURN>
+<id: "d">
+29:         return d
+<'}'>
+Reduce to method declaration
+30:     }
+31: 
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+32:     def main(){
+<VAR>
+<id: "c">
+<':'>
+<INT>
+33:         var c:int
+<VAR>
+<id: "d">
+<':'>
+<INT>
+34:         var d:int
+<id: "c">
+<'='>
+<id: "twoinone">
+<'('>
+<INT:10>
+<','>
+<INT:10>
+<')'>
+35:         c = twoinone(10, 10)
+<id: "d">
+Reduce to identifier <'='>
+<id: "threeinone">
+<'('>
+<INT:10>
+<','>
+<INT:10>
+<')'>
+36:         d = threeinone(10, 10)
+<PRINTLN>
+Reduce to identifier <'('>
+<id: "c">
+<')'>
+37:         println(c)
+<PRINTLN>
+<'('>
+<id: "d">
+<')'>
+38:         println(d)
+<'}'>
+Reduce to method declaration
+39:     }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test7
+<test7 : (null) = 0>
+<twoinone : int = 0>
+<threeinone : int = 0>
+<main : void = 0>
+twoinone
+<twoinone : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+<d : int = 3>
+threeinone
+<threeinone : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<c : int = 2>
+<d : int = 3>
+main
+<main : (null) = 0>
+<c : int = 0>
+<d : int = 1>
+2: 
+3:  * class: test8, read implementation test.
+4:  * read a int and pass to a procedure
+5:  * read a string and print it on monitor
+6:  * and string constant
+6:  */
+7: 
+<OBJECT>
+<id: "test8">
+<'{'>
+8:  object test8{
+<DEF>
+<id: "add">
+<'('>
+<id: "a">
+<':'>
+<INT>
+<','>
+<id: "b">
+<':'>
+<INT>
+<')'>
+<':'>
+<INT>
+<'{'>
+9:      def add(a:int, b:int):int{
+<RETURN>
+<id: "a">
+<'+'>
+<id: "b">
+10:          return a+b
+<'}'>
+Reduce to method declaration
+11:      }
+12:      
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+13:      def main(){
+<VAR>
+<id: "a">
+<':'>
+<INT>
+<'='>
+<INT:0>
+14:          var a:int = 0
+<VAR>
+<id: "b">
+<':'>
+<INT>
+<'='>
+<INT:0>
+15:          var b:int = 0
+<VAL>
+<id: "str1">
+<':'>
+<STRING>
+<'='>
+<string: "Enter first integer to add:">
+16:          val str1:string = "Enter first integer to add:"
+<VAL>
+<id: "str2">
+<':'>
+<STRING>
+<'='>
+<string: "Enter second integer to add:">
+17:          val str2:string = "Enter second integer to add:"
+<PRINT>
+<'('>
+<id: "str1">
+<')'>
+18:          print(str1)
+<READ>
+<id: "a">
+19:          read a
+<PRINT>
+<'('>
+<id: "str2">
+<')'>
+20:          print(str2)
+<READ>
+<id: "b">
+21:          read b
+<PRINTLN>
+<'('>
+<id: "add">
+<'('>
+<id: "a">
+<','>
+<id: "b">
+<')'>
+<')'>
+22:          println(add(a,b))
+<'}'>
+Reduce to method declaration
+23:      }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test8
+<test8 : (null) = 0>
+<add : int = 0>
+<main : void = 0>
+add
+<add : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+main
+<main : (null) = 0>
+<a : int = 0>
+<b : int = 1>
+<str1 : string = 0>
+<str2 : string = 0>
+2: 
+3:  * class: test9, string constant, 
+3:  */
+4: 
+<OBJECT>
+<id: "test9">
+<'{'>
+5:  object test9{
+<DEF>
+<id: "main">
+<'('>
+<')'>
+type NUll
+<'{'>
+6:     def main(){
+<VAL>
+<id: "firstStr">
+<':'>
+<STRING>
+<'='>
+<string: "Hello ">
+7:         val firstStr:string = "Hello "
+<VAL>
+<id: "secondStr">
+<'='>
+<string: "World ">
+8:         val secondStr = "World "
+<VAL>
+<id: "thirdStr">
+<':'>
+<STRING>
+<'='>
+<string: "this world suck">
+9:         val thirdStr:string = "this world suck"
+<PRINT>
+<'('>
+<id: "firstStr">
+<')'>
+10:         print(firstStr)
+<PRINT>
+<'('>
+<id: "secondStr">
+<')'>
+11:         print(secondStr)
+<PRINT>
+<'('>
+<id: "thirdStr">
+<')'>
+12:         print(thirdStr)
+<'}'>
+Reduce to method declaration
+13:     }
+<'}'>
+Reduce to program
+
+Symbol Table List
+test9
+<test9 : (null) = 0>
+<main : void = 0>
+main
+<main : (null) = 0>
+<firstStr : string = 0>
+<secondStr : string = 0>
+<thirdStr : string = 0>
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test1, two functions*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test1 {
+      6: /* 5: object test1{*/
+      7: /* 7:     val str1:string=""*/
+      8: method public static int add (int,int)
+      9: max_stack 15
+     10: max_locals 15
+     11: {
+     12: /* 8:     def add(a:int, b:int):int{*/
+     13: /* 9:         var result:int*/
+     14: sipush 0
+     15: istore 2
+     16: iload 0
+     17: /* 10:         result = a+b*/
+     18: iload 1
+     19: iadd
+     20: istore 2
+     21: /* 11:         return result*/
+     22: iload 2
+     23: ireturn
+     24: }
+     25: /* 12:     }*/
+     26: method public static int mul (int,int)
+     27: max_stack 15
+     28: max_locals 15
+     29: {
+     30: /* 13:     def mul(a:int, b:int):int{*/
+     31: /* 14:         var result:int*/
+     32: sipush 0
+     33: istore 2
+     34: getstatic java.io.PrintStream java.lang.System.out
+     35: iload 0
+     36: iload 1
+     37: imul
+     38: invokevirtual void java.io.PrintStream.println(int)
+     39: /* 15:         println (a*b)*/
+     40: iload 0
+     41: /* 16:         result = a+b*/
+     42: iload 1
+     43: iadd
+     44: istore 2
+     45: /* 17:         return result*/
+     46: iload 2
+     47: ireturn
+     48: }
+     49: /* 18:     }*/
+     50: method public static void main (java.lang.String[])
+     51: max_stack 15
+     52: max_locals 15
+     53: {
+     54: /* 19:     def main(){*/
+     55: sipush 5
+     56: istore 0
+     57: /* 20:         var pi:int = 5*/
+     58: /* 21:         var c:int*/
+     59: sipush 0
+     60: istore 1
+     61: sipush 5
+     62: sipush 5
+     63: invokestatic int test1.mul(int ,int )
+     64: /* 22:         c= mul(5,5)*/
+     65: istore 1
+     66: sipush 5
+     67: sipush 3
+     68: invokestatic int test1.add(int ,int )
+     69: /* 23:         pi = add(5, 3)*/
+     70: istore 0
+     71: getstatic java.io.PrintStream java.lang.System.out
+     72: iload 1
+     73: invokevirtual void java.io.PrintStream.println(int)
+     74: /* 24:         println(c)*/
+     75: getstatic java.io.PrintStream java.lang.System.out
+     76: iload 0
+     77: invokevirtual void java.io.PrintStream.println(int)
+     78: /* 25:         println(pi)*/
+     79: return
+     80: }
+     81: /* 26:     }*/
+     82: }
+     83: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test10, array utility*/
+      3: /* 3:  * a fibonacci based on dynamic programming*/
+      4: /* 4:  */
+      5: /* 5: */
+      6: class test10 {
+      7: /* 6: object test10{*/
+      8: method public static int fib (int)
+      9: max_stack 15
+     10: max_locals 15
+     11: {
+     12: /* 7:     def fib(a:int):int{*/
+     13: /* 8:         var b:int*/
+     14: sipush 0
+     15: istore 1
+     16: sipush 2
+     17: istore 2
+     18: /* 9:         var i:int = 2*/
+     19: sipush 1
+     20: istore 3
+     21: /* 10:         var temp:int= 1*/
+     22: /* 11:         b = a*/
+     23: /* 12:          although this algorithm is capable of fast*/
+     24: /* 13:          * fibonacci sequence, but we won't use that much.*/
+     25: /* 14:          */
+     26: iload 0
+     27: istore 1
+     28: }
+     29: 
+
+*     End of Assembly 
+
+
+*    29: ^^^ syntax error
+*    29:  
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  *  test2: Example with Functions*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test2 {
+      6: /* 5:  object test2{*/
+      7: /* 7:      val a = 5*/
+      8: /* 8: */
+      9: /* 10:      var c:int*/
+     10: /* 11: */
+     11: field static int c
+     12: method public static int add (int,int)
+     13: max_stack 15
+     14: max_locals 15
+     15: {
+     16: /* 13:      def add(a:int, b:int):int{*/
+     17: iload 0
+     18: /* 14:          return a+b*/
+     19: iload 1
+     20: iadd
+     21: ireturn
+     22: }
+     23: /* 15:      }*/
+     24: /* 16: */
+     25: method public static void main (java.lang.String[])
+     26: max_stack 15
+     27: max_locals 15
+     28: {
+     29: /* 18:      def main(){*/
+     30: sipush 5
+     31: sipush 10
+     32: invokestatic int test2.add(int ,int )
+     33: /* 19:          c = add(a, 10)*/
+     34: putstatic int test2.c 
+     35: getstatic int test2.c
+     36: sipush 10
+     37: isub
+     38: ifgt I200
+     39: iconst_0
+     40: goto I201
+     41: I200:
+     42: iconst_1
+     43: I201:
+     44: ifeq I202
+     45: /* 20:          if(c>10)*/
+     46: getstatic java.io.PrintStream java.lang.System.out
+     47: getstatic int test2.c
+     48: ineg
+     49: invokevirtual void java.io.PrintStream.print(int)
+     50: /* 21:             print(-c)*/
+     51: goto I203
+     52: I202:
+     53: iconst_1
+     54: pop
+     55: /* 22:         else*/
+     56: getstatic java.io.PrintStream java.lang.System.out
+     57: getstatic int test2.c
+     58: invokevirtual void java.io.PrintStream.print(int)
+     59: I203:
+     60: iconst_1
+     61: pop
+     62: /* 23:             print(c)*/
+     63: getstatic java.io.PrintStream java.lang.System.out
+     64: ldc "Hello World"
+     65: invokevirtual void java.io.PrintStream.println(java.lang.String)
+     66: /* 24:         println("Hello World")*/
+     67: return
+     68: }
+     69: /* 25:      }*/
+     70: }
+     71: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test3 example code given by course*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test3 {
+      6: /* 5: object test3{*/
+      7: /* 6:     val pi:int = 3*/
+      8: field static int a
+      9: /* 7:     var a = 3*/
+     10: method public static int power (int,int)
+     11: max_stack 15
+     12: max_locals 15
+     13: {
+     14: /* 8:     def power(a:int, b:int):int{*/
+     15: sipush 0
+     16: istore 2
+     17: /* 9:         var i=0*/
+     18: sipush 1
+     19: istore 3
+     20: /* 10:         var j=1*/
+     21: /* 11:         i = a*/
+     22: iload 0
+     23: istore 2
+     24: L120:
+     25: iload 3
+     26: iload 1
+     27: isub
+     28: iflt L121
+     29: iconst_0
+     30: goto L122
+     31: L121:
+     32: iconst_1
+     33: L122:
+     34: ifeq L123
+     35: /* 12:         while(j<b){*/
+     36: iload 2
+     37: /* 13:             i=i*a*/
+     38: iload 0
+     39: imul
+     40: istore 2
+     41: iload 3
+     42: sipush 1
+     43: /* 14:             j=j+1*/
+     44: iadd
+     45: istore 3
+     46: goto L120
+     47: L123:
+     48: iconst_1
+     49: pop
+     50: /* 15:         }*/
+     51: /* 16:         return i*/
+     52: iload 2
+     53: ireturn
+     54: }
+     55: /* 17:     }*/
+     56: method public static void main (java.lang.String[])
+     57: max_stack 15
+     58: max_locals 15
+     59: {
+     60: /* 18:     def main(){*/
+     61: sipush 0
+     62: istore 0
+     63: /* 19:         var a:int = 0*/
+     64: sipush 2
+     65: sipush 3
+     66: invokestatic int test3.power(int ,int )
+     67: /* 20:         a=power(2,3)*/
+     68: istore 0
+     69: getstatic java.io.PrintStream java.lang.System.out
+     70: iload 0
+     71: invokevirtual void java.io.PrintStream.println(int)
+     72: /* 21:         println(a)*/
+     73: return
+     74: }
+     75: /* 22:     }*/
+     76: }
+     77: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test4, nested if...else... statement and while loop*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test4 {
+      6: /* 5: object test4{*/
+      7: /* 6:     val real:int = 10*/
+      8: method public static int fib (int)
+      9: max_stack 15
+     10: max_locals 15
+     11: {
+     12: /* 7:     def fib(a:int):int{*/
+     13: sipush 1
+     14: istore 1
+     15: /* 8:         var i0=1*/
+     16: sipush 1
+     17: istore 2
+     18: /* 9:         var i1=1*/
+     19: sipush 2
+     20: istore 3
+     21: /* 10:         var i2=2*/
+     22: sipush 0
+     23: istore 4
+     24: /* 11:         var temp=0*/
+     25: sipush 2
+     26: istore 5
+     27: /* 12:         var j=2*/
+     28: iload 0
+     29: sipush 0
+     30: isub
+     31: ifeq I130
+     32: iconst_0
+     33: goto I131
+     34: I130:
+     35: iconst_1
+     36: I131:
+     37: ifeq I132
+     38: /* 13:         if(a == 0){*/
+     39: /* 14:             temp = i0*/
+     40: iload 1
+     41: istore 4
+     42: goto I133
+     43: I132:
+     44: iconst_1
+     45: pop
+     46: /* 15:         }else{*/
+     47: iload 0
+     48: sipush 1
+     49: isub
+     50: ifeq I160
+     51: iconst_0
+     52: goto I161
+     53: I160:
+     54: iconst_1
+     55: I161:
+     56: ifeq I162
+     57: /* 16:             if(a == 1){*/
+     58: /* 17:                 temp = i1*/
+     59: iload 2
+     60: istore 4
+     61: goto I163
+     62: I162:
+     63: iconst_1
+     64: pop
+     65: /* 18:             }else{*/
+     66: iload 0
+     67: sipush 2
+     68: isub
+     69: ifeq I190
+     70: iconst_0
+     71: goto I191
+     72: I190:
+     73: iconst_1
+     74: I191:
+     75: ifeq I192
+     76: /* 19:                 if(a == 2){*/
+     77: /* 20:                     temp = i2*/
+     78: iload 3
+     79: istore 4
+     80: goto I193
+     81: I192:
+     82: iconst_1
+     83: pop
+     84: /* 21:                 }else{*/
+     85: L220:
+     86: iload 5
+     87: iload 0
+     88: isub
+     89: iflt L221
+     90: iconst_0
+     91: goto L222
+     92: L221:
+     93: iconst_1
+     94: L222:
+     95: ifeq L223
+     96: /* 22:                     while(j < a){*/
+     97: /* 23:                         i0 = i1*/
+     98: iload 2
+     99: istore 1
+    100: /* 24:                         i1 = i2*/
+    101: iload 3
+    102: istore 2
+    103: iload 2
+    104: /* 25:                         i2 = i1+i0*/
+    105: iload 1
+    106: iadd
+    107: istore 3
+    108: iload 5
+    109: sipush 1
+    110: /* 26:                         j=j+1*/
+    111: iadd
+    112: istore 5
+    113: /* 27:                         temp = i2*/
+    114: iload 3
+    115: istore 4
+    116: goto L220
+    117: L223:
+    118: iconst_1
+    119: pop
+    120: /* 28:                     }*/
+    121: I193:
+    122: iconst_1
+    123: pop
+    124: /* 29:                 }*/
+    125: I163:
+    126: iconst_1
+    127: pop
+    128: /* 30:             }*/
+    129: I133:
+    130: iconst_1
+    131: pop
+    132: /* 31:         }*/
+    133: /* 32:         return temp*/
+    134: iload 4
+    135: ireturn
+    136: }
+    137: /* 33:     }*/
+    138: method public static void main (java.lang.String[])
+    139: max_stack 15
+    140: max_locals 15
+    141: {
+    142: /* 34:     def main(){*/
+    143: /* 35:         var c:int*/
+    144: sipush 0
+    145: istore 0
+    146: /* 36:         var d:int*/
+    147: sipush 0
+    148: istore 1
+    149: getstatic java.io.PrintStream java.lang.System.out
+    150: ldc "fib of "
+    151: invokevirtual void java.io.PrintStream.print(java.lang.String)
+    152: /* 37:         print("fib of ")*/
+    153: P1:
+    154: getstatic java.io.InputStream java.lang.System.in
+    155: invokevirtual int java.io.InputStream.read()
+    156: istore 14
+    157: iload 14
+    158: sipush 10
+    159: isub
+    160: ifeq P2
+    161: iconst_1
+    162: goto P3
+    163: P2:
+    164: iconst_0
+    165: P3:
+    166: ifeq P4
+    167: sipush 10
+    168: iload 1
+    169: imul
+    170: iload 14
+    171: sipush 48
+    172: isub
+    173: iadd
+    174: istore 1
+    175: goto P1
+    176: P4:
+    177: /* 38:         read d*/
+    178: iload 1
+    179: invokestatic int test4.fib(int )
+    180: /* 39:         c = fib(d)*/
+    181: istore 0
+    182: getstatic java.io.PrintStream java.lang.System.out
+    183: ldc " = "
+    184: invokevirtual void java.io.PrintStream.print(java.lang.String)
+    185: /* 40:         print(" = ")*/
+    186: getstatic java.io.PrintStream java.lang.System.out
+    187: iload 0
+    188: invokevirtual void java.io.PrintStream.println(int)
+    189: /* 41:         println(c)*/
+    190: return
+    191: }
+    192: /* 42:     }*/
+    193: }
+    194: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test5, nested while loop*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test5 {
+      6: /* 5:  object test5{*/
+      7: method public static int onewhile (int)
+      8: max_stack 15
+      9: max_locals 15
+     10: {
+     11: /* 6:      def onewhile(a:int):int{*/
+     12: sipush 0
+     13: istore 1
+     14: /* 7:          var j:int = 0*/
+     15: sipush 0
+     16: istore 2
+     17: /* 8:          var temp:int = 0*/
+     18: L90:
+     19: iload 1
+     20: iload 0
+     21: isub
+     22: ifle L91
+     23: iconst_0
+     24: goto L92
+     25: L91:
+     26: iconst_1
+     27: L92:
+     28: ifeq L93
+     29: /* 9:          while(j <= a){*/
+     30: iload 2
+     31: /* 10:              temp = temp + j*/
+     32: iload 1
+     33: iadd
+     34: istore 2
+     35: iload 1
+     36: sipush 1
+     37: /* 11:              j = j+1*/
+     38: iadd
+     39: istore 1
+     40: goto L90
+     41: L93:
+     42: iconst_1
+     43: pop
+     44: /* 12:          }*/
+     45: /* 13:          return temp*/
+     46: iload 2
+     47: ireturn
+     48: }
+     49: /* 14:      }*/
+     50: method public static int twowhile (int,int)
+     51: max_stack 15
+     52: max_locals 15
+     53: {
+     54: /* 15:      def twowhile(a:int, b:int):int{*/
+     55: sipush 0
+     56: istore 2
+     57: /* 16:          var i:int = 0*/
+     58: sipush 0
+     59: istore 3
+     60: /* 17:          var j:int = 0*/
+     61: sipush 0
+     62: istore 4
+     63: /* 18:          var temp = 0*/
+     64: L190:
+     65: iload 2
+     66: iload 0
+     67: isub
+     68: ifle L191
+     69: iconst_0
+     70: goto L192
+     71: L191:
+     72: iconst_1
+     73: L192:
+     74: ifeq L193
+     75: /* 19:          while(i <= a){*/
+     76: L200:
+     77: iload 3
+     78: iload 1
+     79: isub
+     80: ifle L201
+     81: iconst_0
+     82: goto L202
+     83: L201:
+     84: iconst_1
+     85: L202:
+     86: ifeq L203
+     87: /* 20:              while(j <= b){*/
+     88: iload 4
+     89: /* 21:                  temp = temp + j*/
+     90: iload 3
+     91: iadd
+     92: istore 4
+     93: iload 3
+     94: sipush 1
+     95: /* 22:                  j = j+1*/
+     96: iadd
+     97: istore 3
+     98: goto L200
+     99: L203:
+    100: iconst_1
+    101: pop
+    102: /* 23:              }*/
+    103: sipush 0
+    104: /* 24:              j=0*/
+    105: istore 3
+    106: iload 2
+    107: sipush 1
+    108: /* 25:              i = i+1*/
+    109: iadd
+    110: istore 2
+    111: goto L190
+    112: L193:
+    113: iconst_1
+    114: pop
+    115: /* 26:          }*/
+    116: /* 27:          return temp*/
+    117: iload 4
+    118: ireturn
+    119: }
+    120: /* 28:      }*/
+    121: method public static int threewhile (int,int,int)
+    122: max_stack 15
+    123: max_locals 15
+    124: {
+    125: /* 29:      def threewhile(a:int, b:int, c:int):int{*/
+    126: sipush 0
+    127: istore 3
+    128: /* 30:          var i:int = 0*/
+    129: sipush 0
+    130: istore 4
+    131: /* 31:          var j:int = 0*/
+    132: sipush 0
+    133: istore 5
+    134: /* 32:          var k:int = 0*/
+    135: sipush 0
+    136: istore 6
+    137: /* 33:          var temp:int = 0*/
+    138: L340:
+    139: iload 3
+    140: iload 0
+    141: isub
+    142: ifle L341
+    143: iconst_0
+    144: goto L342
+    145: L341:
+    146: iconst_1
+    147: L342:
+    148: ifeq L343
+    149: /* 34:          while(i <= a){*/
+    150: L350:
+    151: iload 4
+    152: iload 1
+    153: isub
+    154: ifle L351
+    155: iconst_0
+    156: goto L352
+    157: L351:
+    158: iconst_1
+    159: L352:
+    160: ifeq L353
+    161: /* 35:              while(j <= b){*/
+    162: L360:
+    163: iload 5
+    164: iload 2
+    165: isub
+    166: ifle L361
+    167: iconst_0
+    168: goto L362
+    169: L361:
+    170: iconst_1
+    171: L362:
+    172: ifeq L363
+    173: /* 36:                  while(k <= c){*/
+    174: iload 6
+    175: /* 37:                      temp = temp + k*/
+    176: iload 5
+    177: iadd
+    178: istore 6
+    179: iload 5
+    180: sipush 1
+    181: /* 38:                      k = k+1*/
+    182: iadd
+    183: istore 5
+    184: goto L360
+    185: L363:
+    186: iconst_1
+    187: pop
+    188: /* 39:                  }*/
+    189: iload 4
+    190: sipush 1
+    191: /* 40:                  j = j+1*/
+    192: iadd
+    193: istore 4
+    194: sipush 0
+    195: /* 41:                  k=0*/
+    196: istore 5
+    197: goto L350
+    198: L353:
+    199: iconst_1
+    200: pop
+    201: /* 42:              }*/
+    202: iload 3
+    203: sipush 1
+    204: /* 43:              i = i+1*/
+    205: iadd
+    206: istore 3
+    207: sipush 0
+    208: /* 44:              j=0*/
+    209: istore 4
+    210: goto L340
+    211: L343:
+    212: iconst_1
+    213: pop
+    214: /* 45:          }*/
+    215: /* 46:          return temp*/
+    216: iload 6
+    217: ireturn
+    218: }
+    219: /* 47:      }*/
+    220: method public static void main (java.lang.String[])
+    221: max_stack 15
+    222: max_locals 15
+    223: {
+    224: /* 48:      def main(){*/
+    225: /* 49:          var a:int*/
+    226: sipush 0
+    227: istore 0
+    228: /* 50:          var b:int*/
+    229: sipush 0
+    230: istore 1
+    231: /* 51:          var c:int*/
+    232: sipush 0
+    233: istore 2
+    234: sipush 10
+    235: invokestatic int test5.onewhile(int )
+    236: /* 52:          a = onewhile(10)*/
+    237: istore 0
+    238: sipush 10
+    239: sipush 10
+    240: invokestatic int test5.twowhile(int ,int )
+    241: /* 53:          b = twowhile(10, 10)*/
+    242: istore 1
+    243: sipush 10
+    244: sipush 10
+    245: sipush 10
+    246: invokestatic int test5.threewhile(int ,int ,int )
+    247: /* 54:          c = threewhile(10, 10, 10)*/
+    248: istore 2
+    249: getstatic java.io.PrintStream java.lang.System.out
+    250: iload 0
+    251: invokevirtual void java.io.PrintStream.println(int)
+    252: /* 55:          println(a)*/
+    253: getstatic java.io.PrintStream java.lang.System.out
+    254: iload 1
+    255: invokevirtual void java.io.PrintStream.println(int)
+    256: /* 56:          println(b)*/
+    257: getstatic java.io.PrintStream java.lang.System.out
+    258: iload 2
+    259: invokevirtual void java.io.PrintStream.println(int)
+    260: /* 57:          println(c)*/
+    261: return
+    262: }
+    263: /* 58:      }*/
+    264: }
+    265: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test6, nested for loop*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test6 {
+      6: /* 5:  object test6{*/
+      7: method public static int onefor (int)
+      8: max_stack 15
+      9: max_locals 15
+     10: {
+     11: /* 6:      def onefor(a:int):int{*/
+     12: sipush 0
+     13: istore 1
+     14: /* 7:          var b:int = 0*/
+     15: sipush 0
+     16: istore 2
+     17: /* 8:          var c:int = 0*/
+     18: sipush 5
+     19: istore 1
+     20: F90:
+     21: iinc 1 1
+*    21:      ^^^ In GenIINCCode.
+*    21:          1
+
+     22: iload 1
+     23: sipush 10
+     24: isub
+     25: ifeq F91
+     26: iconst_1
+     27: goto F92
+     28: F91:
+     29: iconst_0
+     30: F92:
+     31: ifeq F93
+     32: /* 9:          for(b <- 5 to 10){*/
+     33: iload 2
+     34: /* 10:              c = c+a*/
+     35: iload 0
+     36: iadd
+     37: istore 2
+     38: goto F90
+     39: F93:
+     40: iconst_1
+     41: pop
+     42: /* 11:          }*/
+     43: /* 12:          return c*/
+     44: iload 2
+     45: ireturn
+     46: }
+     47: /* 13:      }*/
+     48: /* 14: */
+     49: method public static int twofor (int,int)
+     50: max_stack 15
+     51: max_locals 15
+     52: {
+     53: /* 15:      def twofor(a:int, b:int):int{*/
+     54: /* 16:          var d:int*/
+     55: sipush 0
+     56: istore 2
+     57: /* 17:          var e:int*/
+     58: sipush 0
+     59: istore 3
+     60: /* 18:          var f:int*/
+     61: sipush 0
+     62: istore 4
+     63: sipush 5
+     64: istore 2
+     65: F190:
+     66: iinc 2 1
+*    66:      ^^^ In GenIINCCode.
+*    66:          1
+
+     67: iload 2
+     68: sipush 10
+     69: isub
+     70: ifeq F191
+     71: iconst_1
+     72: goto F192
+     73: F191:
+     74: iconst_0
+     75: F192:
+     76: ifeq F193
+     77: /* 19:          for(d <- 5 to 10){*/
+     78: sipush 5
+     79: istore 3
+     80: F200:
+     81: iinc 3 1
+*    81:      ^^^ In GenIINCCode.
+*    81:          1
+
+     82: iload 3
+     83: sipush 10
+     84: isub
+     85: ifeq F201
+     86: iconst_1
+     87: goto F202
+     88: F201:
+     89: iconst_0
+     90: F202:
+     91: ifeq F203
+     92: /* 20:              for(e <- 5 to 10){*/
+     93: iload 4
+     94: /* 21:                  f = f+a*/
+     95: iload 0
+     96: iadd
+     97: istore 4
+     98: goto F200
+     99: F203:
+    100: iconst_1
+    101: pop
+    102: /* 22:              }*/
+    103: iload 4
+    104: /* 23:              f = f+b*/
+    105: iload 1
+    106: iadd
+    107: istore 4
+    108: goto F190
+    109: F193:
+    110: iconst_1
+    111: pop
+    112: /* 24:          }*/
+    113: /* 25:          return f*/
+    114: iload 4
+    115: ireturn
+    116: }
+    117: /* 26:      }*/
+    118: /* 27: */
+    119: method public static int threefor (int,int,int)
+    120: max_stack 15
+    121: max_locals 15
+    122: {
+    123: /* 28:      def threefor(a:int, b:int, c:int):int{*/
+    124: /* 29:          var d:int*/
+    125: sipush 0
+    126: istore 3
+    127: /* 30:          var e:int*/
+    128: sipush 0
+    129: istore 4
+    130: /* 31:          var f:int*/
+    131: sipush 0
+    132: istore 5
+    133: /* 32:          var g:int*/
+    134: sipush 0
+    135: istore 6
+    136: sipush 5
+    137: istore 3
+    138: F330:
+    139: iinc 3 1
+*   139:      ^^^ In GenIINCCode.
+*   139:          1
+
+    140: iload 3
+    141: sipush 10
+    142: isub
+    143: ifeq F331
+    144: iconst_1
+    145: goto F332
+    146: F331:
+    147: iconst_0
+    148: F332:
+    149: ifeq F333
+    150: /* 33:          for(d <- 5 to 10){*/
+    151: sipush 5
+    152: istore 4
+    153: F340:
+    154: iinc 4 1
+*   154:      ^^^ In GenIINCCode.
+*   154:          1
+
+    155: iload 4
+    156: sipush 10
+    157: isub
+    158: ifeq F341
+    159: iconst_1
+    160: goto F342
+    161: F341:
+    162: iconst_0
+    163: F342:
+    164: ifeq F343
+    165: /* 34:              for(e <- 5 to 10){*/
+    166: sipush 5
+    167: istore 5
+    168: F350:
+    169: iinc 5 1
+*   169:      ^^^ In GenIINCCode.
+*   169:          1
+
+    170: iload 5
+    171: sipush 10
+    172: isub
+    173: ifeq F351
+    174: iconst_1
+    175: goto F352
+    176: F351:
+    177: iconst_0
+    178: F352:
+    179: ifeq F353
+    180: /* 35:                  for(f <- 5 to 10){*/
+    181: iload 6
+    182: /* 36:                      g = g+a*/
+    183: iload 0
+    184: iadd
+    185: istore 6
+    186: goto F350
+    187: F353:
+    188: iconst_1
+    189: pop
+    190: /* 37:                  }*/
+    191: iload 6
+    192: /* 38:                  g = g+b*/
+    193: iload 1
+    194: iadd
+    195: istore 6
+    196: goto F340
+    197: F343:
+    198: iconst_1
+    199: pop
+    200: /* 39:              }*/
+    201: iload 6
+    202: /* 40:              g = g+c*/
+    203: iload 2
+    204: iadd
+    205: istore 6
+    206: goto F330
+    207: F333:
+    208: iconst_1
+    209: pop
+    210: /* 41:          }*/
+    211: /* 42:          return g*/
+    212: iload 6
+    213: ireturn
+    214: }
+    215: /* 43:      }*/
+    216: /* 44: */
+    217: method public static void main (java.lang.String[])
+    218: max_stack 15
+    219: max_locals 15
+    220: {
+    221: /* 45:      def main(){*/
+    222: sipush 3
+    223: istore 0
+    224: /* 46:          var a: int = 3*/
+    225: sipush 2
+    226: istore 1
+    227: /* 47:          var b: int = 2*/
+    228: sipush 5
+    229: istore 2
+    230: /* 48:          var c: int = 5*/
+    231: iload 0
+    232: invokestatic int test6.onefor(int )
+    233: /* 49:          a = onefor(a)*/
+    234: istore 0
+    235: iload 0
+    236: iload 1
+    237: invokestatic int test6.twofor(int ,int )
+    238: /* 50:          b = twofor(a, b)*/
+    239: istore 1
+    240: iload 0
+    241: iload 1
+    242: iload 2
+    243: invokestatic int test6.threefor(int ,int ,int )
+    244: /* 51:          c = threefor(a, b, c)*/
+    245: istore 2
+    246: getstatic java.io.PrintStream java.lang.System.out
+    247: ldc "a = "
+    248: invokevirtual void java.io.PrintStream.print(java.lang.String)
+    249: /* 52:          print("a = ")*/
+    250: getstatic java.io.PrintStream java.lang.System.out
+    251: iload 0
+    252: invokevirtual void java.io.PrintStream.println(int)
+    253: /* 53:          println(a)*/
+    254: getstatic java.io.PrintStream java.lang.System.out
+    255: ldc "b = "
+    256: invokevirtual void java.io.PrintStream.print(java.lang.String)
+    257: /* 54:          print("b = ")*/
+    258: getstatic java.io.PrintStream java.lang.System.out
+    259: iload 1
+    260: invokevirtual void java.io.PrintStream.println(int)
+    261: /* 55:          println(b)*/
+    262: getstatic java.io.PrintStream java.lang.System.out
+    263: ldc "c = "
+    264: invokevirtual void java.io.PrintStream.print(java.lang.String)
+    265: /* 56:          print("c = ")*/
+    266: getstatic java.io.PrintStream java.lang.System.out
+    267: iload 2
+    268: invokevirtual void java.io.PrintStream.println(int)
+    269: /* 57:          println(c)*/
+    270: return
+    271: }
+    272: /* 58:      }*/
+    273: }
+    274: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * conditional, while, for all together*/
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test7 {
+      6: /* 5: object test7{*/
+      7: method public static int twoinone (int,int)
+      8: max_stack 15
+      9: max_locals 15
+     10: {
+     11: /* 6:     def twoinone(a:int, b:int):int{*/
+     12: /* 7:         var c:int*/
+     13: sipush 0
+     14: istore 2
+     15: sipush 0
+     16: istore 3
+     17: /* 8:         var d:int=0*/
+     18: sipush 5
+     19: istore 2
+     20: F90:
+     21: iinc 2 1
+*    21:      ^^^ In GenIINCCode.
+*    21:          1
+
+     22: iload 2
+     23: sipush 10
+     24: isub
+     25: ifeq F91
+     26: iconst_1
+     27: goto F92
+     28: F91:
+     29: iconst_0
+     30: F92:
+     31: ifeq F93
+     32: /* 9:         for(c <- 5 to 10){*/
+     33: L100:
+     34: iload 2
+     35: iload 1
+     36: imul
+     37: sipush 20
+     38: isub
+     39: iflt L101
+     40: iconst_0
+     41: goto L102
+     42: L101:
+     43: iconst_1
+     44: L102:
+     45: ifeq L103
+     46: /* 10:             while(c*b < 20){*/
+     47: iload 3
+     48: /* 11:                 d = d+a*/
+     49: iload 0
+     50: iadd
+     51: istore 3
+     52: goto L100
+     53: L103:
+     54: iconst_1
+     55: pop
+     56: /* 12:             }*/
+     57: goto F90
+     58: F93:
+     59: iconst_1
+     60: pop
+     61: /* 13:         }*/
+     62: /* 14:         return d*/
+     63: iload 3
+     64: ireturn
+     65: }
+     66: /* 15:     }*/
+     67: /* 16:     */
+     68: method public static int threeinone (int,int)
+     69: max_stack 15
+     70: max_locals 15
+     71: {
+     72: /* 17:     def threeinone(a:int, b:int):int{*/
+     73: /* 18:         var c:int*/
+     74: sipush 0
+     75: istore 2
+     76: sipush 1
+     77: istore 3
+     78: /* 19:         var d:int=1*/
+     79: sipush 5
+     80: istore 2
+     81: F200:
+     82: iinc 2 1
+*    82:      ^^^ In GenIINCCode.
+*    82:          1
+
+     83: iload 2
+     84: sipush 10
+     85: isub
+     86: ifeq F201
+     87: iconst_1
+     88: goto F202
+     89: F201:
+     90: iconst_0
+     91: F202:
+     92: ifeq F203
+     93: /* 20:         for(c <- 5 to 10){*/
+     94: L210:
+     95: iload 2
+     96: iload 1
+     97: imul
+     98: sipush 20
+     99: isub
+    100: iflt L211
+    101: iconst_0
+    102: goto L212
+    103: L211:
+    104: iconst_1
+    105: L212:
+    106: ifeq L213
+    107: /* 21:             while(c*b < 20){*/
+    108: iload 2
+    109: iload 3
+    110: imul
+    111: sipush 15
+    112: isub
+    113: iflt I220
+    114: iconst_0
+    115: goto I221
+    116: I220:
+    117: iconst_1
+    118: I221:
+    119: ifeq I222
+    120: /* 22:                 if(c*d <15){*/
+    121: iload 0
+    122: /* 23:                     d = a+d*/
+    123: iload 3
+    124: iadd
+    125: istore 3
+    126: goto I223
+    127: I222:
+    128: iconst_1
+    129: pop
+    130: /* 24:                 }else{*/
+    131: iload 1
+    132: /* 25:                     d = b+d*/
+    133: iload 3
+    134: iadd
+    135: istore 3
+    136: I223:
+    137: iconst_1
+    138: pop
+    139: /* 26:                 }*/
+    140: goto L210
+    141: L213:
+    142: iconst_1
+    143: pop
+    144: /* 27:             }*/
+    145: goto F200
+    146: F203:
+    147: iconst_1
+    148: pop
+    149: /* 28:         }*/
+    150: /* 29:         return d*/
+    151: iload 3
+    152: ireturn
+    153: }
+    154: /* 30:     }*/
+    155: /* 31: */
+    156: method public static void main (java.lang.String[])
+    157: max_stack 15
+    158: max_locals 15
+    159: {
+    160: /* 32:     def main(){*/
+    161: /* 33:         var c:int*/
+    162: sipush 0
+    163: istore 0
+    164: /* 34:         var d:int*/
+    165: sipush 0
+    166: istore 1
+    167: sipush 10
+    168: sipush 10
+    169: invokestatic int test7.twoinone(int ,int )
+    170: /* 35:         c = twoinone(10, 10)*/
+    171: istore 0
+    172: sipush 10
+    173: sipush 10
+    174: invokestatic int test7.threeinone(int ,int )
+    175: /* 36:         d = threeinone(10, 10)*/
+    176: istore 1
+    177: getstatic java.io.PrintStream java.lang.System.out
+    178: iload 0
+    179: invokevirtual void java.io.PrintStream.println(int)
+    180: /* 37:         println(c)*/
+    181: getstatic java.io.PrintStream java.lang.System.out
+    182: iload 1
+    183: invokevirtual void java.io.PrintStream.println(int)
+    184: /* 38:         println(d)*/
+    185: return
+    186: }
+    187: /* 39:     }*/
+    188: }
+    189: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test8, read implementation test.*/
+      3: /* 3:  * read a int and pass to a procedure*/
+      4: /* 4:  * read a string and print it on monitor*/
+      5: /* 5:  * and string constant*/
+      6: /* 6:  */
+      7: /* 7: */
+      8: class test8 {
+      9: /* 8:  object test8{*/
+     10: method public static int add (int,int)
+     11: max_stack 15
+     12: max_locals 15
+     13: {
+     14: /* 9:      def add(a:int, b:int):int{*/
+     15: iload 0
+     16: /* 10:          return a+b*/
+     17: iload 1
+     18: iadd
+     19: ireturn
+     20: }
+     21: /* 11:      }*/
+     22: /* 12:      */
+     23: method public static void main (java.lang.String[])
+     24: max_stack 15
+     25: max_locals 15
+     26: {
+     27: /* 13:      def main(){*/
+     28: sipush 0
+     29: istore 0
+     30: /* 14:          var a:int = 0*/
+     31: sipush 0
+     32: istore 1
+     33: /* 15:          var b:int = 0*/
+     34: /* 16:          val str1:string = "Enter first integer to add:"*/
+     35: /* 17:          val str2:string = "Enter second integer to add:"*/
+     36: getstatic java.io.PrintStream java.lang.System.out
+     37: ldc "Enter first integer to add:"
+     38: invokevirtual void java.io.PrintStream.print(java.lang.String)
+     39: /* 18:          print(str1)*/
+     40: P1:
+     41: getstatic java.io.InputStream java.lang.System.in
+     42: invokevirtual int java.io.InputStream.read()
+     43: istore 14
+     44: iload 14
+     45: sipush 10
+     46: isub
+     47: ifeq P2
+     48: iconst_1
+     49: goto P3
+     50: P2:
+     51: iconst_0
+     52: P3:
+     53: ifeq P4
+     54: sipush 10
+     55: iload 0
+     56: imul
+     57: iload 14
+     58: sipush 48
+     59: isub
+     60: iadd
+     61: istore 0
+     62: goto P1
+     63: P4:
+     64: /* 19:          read a*/
+     65: getstatic java.io.PrintStream java.lang.System.out
+     66: ldc "Enter second integer to add:"
+     67: invokevirtual void java.io.PrintStream.print(java.lang.String)
+     68: /* 20:          print(str2)*/
+     69: P5:
+     70: getstatic java.io.InputStream java.lang.System.in
+     71: invokevirtual int java.io.InputStream.read()
+     72: istore 14
+     73: iload 14
+     74: sipush 10
+     75: isub
+     76: ifeq P6
+     77: iconst_1
+     78: goto P7
+     79: P6:
+     80: iconst_0
+     81: P7:
+     82: ifeq P8
+     83: sipush 10
+     84: iload 1
+     85: imul
+     86: iload 14
+     87: sipush 48
+     88: isub
+     89: iadd
+     90: istore 1
+     91: goto P5
+     92: P8:
+     93: /* 21:          read b*/
+     94: getstatic java.io.PrintStream java.lang.System.out
+     95: iload 0
+     96: iload 1
+     97: invokestatic int test8.add(int ,int )
+     98: invokevirtual void java.io.PrintStream.println(int)
+     99: /* 22:          println(add(a,b))*/
+    100: return
+    101: }
+    102: /* 23:      }*/
+    103: }
+    104: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+
+*     Java Assembler
+
+
+      1: /* 1: */
+      2: /* 2:  * class: test9, string constant, */
+      3: /* 3:  */
+      4: /* 4: */
+      5: class test9 {
+      6: /* 5:  object test9{*/
+      7: method public static void main (java.lang.String[])
+      8: max_stack 15
+      9: max_locals 15
+     10: {
+     11: /* 6:     def main(){*/
+     12: /* 7:         val firstStr:string = "Hello "*/
+     13: /* 8:         val secondStr = "World "*/
+     14: /* 9:         val thirdStr:string = "this world suck"*/
+     15: getstatic java.io.PrintStream java.lang.System.out
+     16: ldc "Hello "
+     17: invokevirtual void java.io.PrintStream.print(java.lang.String)
+     18: /* 10:         print(firstStr)*/
+     19: getstatic java.io.PrintStream java.lang.System.out
+     20: ldc "World "
+     21: invokevirtual void java.io.PrintStream.print(java.lang.String)
+     22: /* 11:         print(secondStr)*/
+     23: getstatic java.io.PrintStream java.lang.System.out
+     24: ldc "this world suck"
+     25: invokevirtual void java.io.PrintStream.print(java.lang.String)
+     26: /* 12:         print(thirdStr)*/
+     27: return
+     28: }
+     29: /* 13:     }*/
+     30: }
+     31: 
+
+*     End of Assembly 
+
+
+ConstPool Dump:
+
+End of ConstPool Dump
+
+
+*     End of Assembly 
+

@@ -113,26 +113,21 @@ letter		[a-zA-Z0-9]
 [ \t]*	{LIST;}
 
 \/\*	{
-			LIST;
-			// prevent to print the leading comment
-			fprintf(outputFile, "%d: %s", linenum, buf);
-			printf("%d: %s", linenum, buf);
-			buf[0] = '\0';
 			BEGIN COMMENT;
 		}
 
 <COMMENT>{
 \n	{
-		LIST;
 		fprintf(outputFile, "/* %d: %s*/\n", linenum++, buf);
+		LIST;
 		printf("%d: %s", linenum, buf);
 		buf[0] = '\0';
 	}
 
 \*\/\n	{
+			fprintf(outputFile, "/* %d: %s*/\n", linenum, buf);
 			LIST;
-			fprintf(outputFile, "/* %d: %s*/\n", linenum++, buf);
-			printf("%d: %s", linenum, buf);
+			printf("%d: %s", linenum++, buf);
 			buf[0] = '\0';
 			BEGIN(INITIAL);
 		}
