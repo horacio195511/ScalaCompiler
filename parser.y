@@ -805,48 +805,55 @@ boolean_expression:
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "iflt B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	num_expression LESSEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifle B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
-
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	num_expression LARGEEQUAL num_expression	{
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifge B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
-
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	num_expression '>' num_expression			{
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifgt B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
-
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	num_expression EQUAL num_expression			{
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifeq B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
-
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	num_expression NOTEQUAL num_expression		{
 															fprintf(outputFile, "isub\n");
 															fprintf(outputFile, "ifnq B%d\n", ++boolindex);
 															fprintf(outputFile, "iconst_1\n");
-															fprintf(outputFile, "B%d:\n", boolindex);
+															fprintf(outputFile, "goto B%d\n", ++boolindex);
+															fprintf(outputFile, "B%d:\n", --boolindex);
 															fprintf(outputFile, "iconst_0\n");
-
+															fprintf(outputFile, "B%d:\n", ++boolindex);
 														}
 		|	boolean_expression AND boolean_expression	{
 															fprintf(outputFile, "iand\n");

@@ -20,3 +20,4 @@ And the value of array could be declared with
 IDENTIFIER[ number ] = number
 note this statement must have some type checking mechanism to ensure that the IDENTIFER is declared as an array.
 Array value could be access by invoke IDENTIFIER[ number ]
+only one dimension array is available, the size of array have to be constant
