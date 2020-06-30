@@ -442,6 +442,7 @@ simple_statement:
 			{
 				// store the value to array
 				fprintf(outputFile, "iastore\n");
+				Trace("Reduce to array value evaluation\n");
 			}
 		|	PRINT 
 			{
