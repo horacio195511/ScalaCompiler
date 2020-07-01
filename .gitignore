@@ -8,5 +8,7 @@ scala
 input.scala
 .vscode/launch.json
 other/*
-test/*
+test/error/*
+test/other/*
+test/other/*.jasm
 javaa/*
